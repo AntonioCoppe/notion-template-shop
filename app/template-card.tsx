@@ -1,18 +1,7 @@
 "use client";
 import Image from "next/image";
 
-export default function TemplateCard({
-  title,
-  price,
-  img,
-  description,
-}: {
-  id: string;
-  title: string;
-  price: number;
-  img: string;
-  description: string;
-}) {
+export default function TemplateCard({ title, price, img, description, }: { id: string; title: string; price: number; img: string; description: string; }) {
   return (
     <div className="border rounded-xl p-4 flex flex-col gap-4 shadow">
       <Image
