@@ -1,9 +1,56 @@
 "use client";
-import Image from "next/image";
 
-export default function TemplateCard({ title, price, img, description, }: { id: string; title: string; price: number; img: string; description: string; }) {
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+type Props = {
+  id: string;
+  title: string;
+  price: number;
+  img: string;
+  description: string;
+  priceId: string;
+};
+
+export default function TemplateCard({
+  id,
+  title,
+  price,
+  img,
+  description,
+  priceId,
+}: Props) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  const handleBuy = async () => {
+    const email = prompt("Where should we send your template link?")?.trim();
+    if (!email) return;
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ priceId, email }),
+      });
+
+      if (!res.ok) throw new Error("Checkout session failed");
+      const { url } = await res.json();
+      router.push(url); // Stripe Checkout
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong – please try again.");
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="border rounded-xl p-4 flex flex-col gap-4 shadow">
+    <div
+      data-template-id={id}
+      className="border rounded-xl p-4 flex flex-col gap-4 shadow"
+    >
       <Image
         src={img}
         alt={title}
@@ -13,11 +60,15 @@ export default function TemplateCard({ title, price, img, description, }: { id: 
       />
       <h2 className="text-xl font-semibold">{title}</h2>
       <p className="text-sm text-gray-600 flex-grow">{description}</p>
+
       <button
-        className="mt-2 rounded bg-black text-white py-2 hover:opacity-90"
-        onClick={() => alert("Stripe checkout coming soon!")}
+        onClick={handleBuy}
+        disabled={loading}
+        className={`mt-2 rounded bg-black text-white py-2 hover:opacity-90 ${
+          loading ? "opacity-50 cursor-not-allowed" : ""
+        }`}
       >
-        Buy for ${price}
+        {loading ? "Redirecting…" : `Buy for $${price}`}
       </button>
     </div>
   );
