@@ -6,13 +6,17 @@ import templates from "@/app/templates";
 
 export const runtime = "nodejs"; // Ensure Buffer is available
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-const resend = new Resend(process.env.RESEND_API_KEY!);
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 export async function POST(req: Request) {
   // 🟢 Diagnostic log to confirm the handler is invoked
   console.log("🟢 Webhook hit at", new Date().toISOString());
+
+  if (!process.env.STRIPE_SECRET_KEY) {
+    console.error("❌ STRIPE_SECRET_KEY is not configured");
+    return NextResponse.json({ error: "Stripe not configured" }, { status: 500 });
+  }
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
   // 1. Verify Stripe signature
   const sig = (await headers()).get("stripe-signature")!;
@@ -35,6 +39,11 @@ export async function POST(req: Request) {
 
   // 2. Handle checkout completion
   if (event.type === "checkout.session.completed") {
+    if (!process.env.RESEND_API_KEY) {
+      console.error("❌ RESEND_API_KEY is not configured");
+      return NextResponse.json({ error: "Email service not configured" }, { status: 500 });
+    }
+    const resend = new Resend(process.env.RESEND_API_KEY);
     const session = event.data.object as Stripe.Checkout.Session;
 
     // Retrieve line items to get the price ID
