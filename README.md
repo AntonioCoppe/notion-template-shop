@@ -1,5 +1,18 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+### Included Marketplace Apps
+
+This repository also contains the open source **B2C Marketplace Storefront** located in
+the [`b2c-marketplace-storefront`](./b2c-marketplace-storefront) folder. You can start it
+in development mode with:
+
+```bash
+npm run storefront:dev
+```
+
+The vendor panel is available under [`vendor-panel`](./vendor-panel) but is not wired up
+yet.
+
 ## Getting Started
 
 First, run the development server:

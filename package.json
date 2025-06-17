@@ -2,11 +2,16 @@
   "name": "notiontemplateshop",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "b2c-marketplace-storefront",
+    "vendor-panel"
+  ],
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "storefront:dev": "npm run dev --workspace b2c-marketplace-storefront"
   },
   "dependencies": {
     "@stripe/stripe-js": "^7.3.1",
