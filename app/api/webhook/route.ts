@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { Resend } from "resend";
 import templates from "@/app/templates";
+import { supabase } from "@/lib/supabase";
 
 export const runtime = "nodejs"; // Ensure Buffer is available
 
@@ -38,18 +39,25 @@ export async function POST(req: Request) {
     const session = event.data.object as Stripe.Checkout.Session;
 
     // Retrieve line items to get the price ID
-    const lineItems = await stripe.checkout.sessions.listLineItems(
-      session.id,
-      { limit: 1 }
-    );
+    const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {
+      limit: 1,
+    });
     const priceId = lineItems.data[0].price?.id;
 
     // Find the matching template in your in-memory catalogue
     const template = templates.find((t) => t.priceId === priceId);
 
-    // Send the Notion duplicate link via email
     if (template && session.customer_email) {
       try {
+        // Store the order in Supabase
+        await supabase.from("orders").insert({
+          email: session.customer_email,
+          template_id: template.id,
+          price_id: priceId,
+          session_id: session.id,
+        });
+
+        // Send the Notion duplicate link via email
         await resend.emails.send({
           from: "Notion Template Shop <support@notiontemplateshop.com>",
           to: session.customer_email,
@@ -65,7 +73,7 @@ export async function POST(req: Request) {
         });
         console.log(`✅ Email sent to ${session.customer_email}`);
       } catch (emailErr) {
-        console.error("❌ Failed to send email:", (emailErr as Error).message);
+        console.error("❌ Failed to process order:", (emailErr as Error).message);
       }
     } else {
       console.warn("⚠️ No template match or missing customer email");

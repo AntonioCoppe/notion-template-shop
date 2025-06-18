@@ -34,3 +34,22 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Orders table
+
+Create this table in Supabase to store completed purchases:
+
+```sql
+create table orders (
+  id uuid primary key default uuid_generate_v4(),
+  email text not null,
+  template_id text not null,
+  price_id text not null,
+  session_id text not null,
+  created_at timestamptz default current_timestamp
+);
+
+create index orders_email_idx on orders(email);
+```
+
+Environment variables are documented in `.env.example`.
