@@ -7,11 +7,19 @@ import { getSupabase } from "@/lib/supabase";
 
 export const runtime = "nodejs"; // Ensure Buffer is available
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-const resend = new Resend(process.env.RESEND_API_KEY!);
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
-
 export async function POST(req: Request) {
+  if (
+    !process.env.STRIPE_SECRET_KEY ||
+    !process.env.RESEND_API_KEY ||
+    !process.env.STRIPE_WEBHOOK_SECRET
+  ) {
+    console.error("Missing Stripe/Resend environment variables");
+    return new NextResponse("Server configuration error", { status: 500 });
+  }
+
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
   // 🟢 Diagnostic log to confirm the handler is invoked
   console.log("🟢 Webhook hit at", new Date().toISOString());
 
