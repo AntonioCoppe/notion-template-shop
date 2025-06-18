@@ -7,11 +7,12 @@ export const dynamic = "force-dynamic";
 export default async function Account({
   searchParams,
 }: {
-  searchParams: { email?: string };
+  searchParams: Promise<{ email?: string }>;
 }) {
-  const email = searchParams.email?.trim();
+  const { email } = await searchParams;
+  const trimmedEmail = email?.trim();
 
-  if (!email) {
+  if (!trimmedEmail) {
     return (
       <main className="max-w-lg mx-auto px-4 py-20 text-center">
         <h1 className="text-2xl font-bold mb-4">Find your purchases</h1>
@@ -34,7 +35,7 @@ export default async function Account({
   const { data, error } = await supabase
     .from("orders")
     .select("template_id, created_at")
-    .eq("email", email)
+    .eq("email", trimmedEmail)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -70,7 +71,7 @@ export default async function Account({
           ))}
         </ul>
       ) : (
-        <p className="text-center">No purchases found for {email}.</p>
+        <p className="text-center">No purchases found for {trimmedEmail}.</p>
       )}
       <div className="mt-8 text-center">
         <Link href="/">Back to templates</Link>
