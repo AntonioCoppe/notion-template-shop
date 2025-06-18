@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { Resend } from "resend";
 import templates from "@/app/templates";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 
 export const runtime = "nodejs"; // Ensure Buffer is available
 
@@ -37,6 +37,7 @@ export async function POST(req: Request) {
   // 2. Handle checkout completion
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
+    const supabase = getSupabase();
 
     // Retrieve line items to get the price ID
     const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {

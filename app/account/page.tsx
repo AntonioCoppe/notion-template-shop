@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import templates from "@/app/templates";
 import Link from "next/link";
 
@@ -31,6 +31,8 @@ export default async function Account({
       </main>
     );
   }
+
+  const supabase = getSupabase();
 
   const { data, error } = await supabase
     .from("orders")
