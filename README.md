@@ -58,4 +58,13 @@ Tables and columns:
 Row-level security policies ensure a vendor can only read templates that belong
 to them.
 
-Environment variables are documented in `.env.example`.
+### Environment variables
+
+Copy `.env.example` to `.env.local` and provide values for the following keys:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+These variables are required for Supabase to work locally and on Vercel. The
+app will throw "Supabase environment variables are missing" if any are unset.
