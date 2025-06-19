@@ -57,6 +57,8 @@ export default function TemplateCard({
         width={400}
         height={250}
         className="rounded-lg object-cover"
+        priority={id === "freelancer-dashboard"}
+        style={{ width: "auto", height: "auto" }}
       />
       <h2 className="text-xl font-semibold">{title}</h2>
       <p className="text-sm text-gray-600 flex-grow">{description}</p>

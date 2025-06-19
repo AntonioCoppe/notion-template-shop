@@ -58,12 +58,25 @@ export async function POST(req: Request) {
 
     if (template && session.customer_email) {
       try {
+        // Look up the buyer by email
+        const { data: userData, error: userError } = await supabase
+          .from('auth.users')
+          .select('id')
+          .eq('email', session.customer_email)
+          .single();
+        if (userError || !userData) throw new Error('User not found');
+        const { data: buyerData, error: buyerError } = await supabase
+          .from('buyers')
+          .select('id')
+          .eq('user_id', userData.id)
+          .single();
+        if (buyerError || !buyerData) throw new Error('Buyer not found');
         // Store the order in Supabase
         await supabase.from("orders").insert({
-          email: session.customer_email,
+          buyer_id: buyerData.id,
           template_id: template.id,
-          price_id: priceId,
-          session_id: session.id,
+          amount: template.price,
+          status: 'paid',
         });
 
         // Send the Notion duplicate link via email

@@ -34,10 +34,44 @@ export default async function Account({
 
   const supabase = getSupabase();
 
+  // Look up the buyer by email
+  const { data: userData, error: userError } = await supabase
+    .from('auth.users')
+    .select('id')
+    .eq('email', trimmedEmail)
+    .single();
+  if (userError || !userData) {
+    return (
+      <main className="max-w-lg mx-auto px-4 py-20 text-center">
+        <h1 className="text-2xl font-bold mb-4">No purchases found</h1>
+        <p className="text-center">No user found for {trimmedEmail}.</p>
+        <div className="mt-8 text-center">
+          <Link href="/">Back to templates</Link>
+        </div>
+      </main>
+    );
+  }
+  const { data: buyerData, error: buyerError } = await supabase
+    .from('buyers')
+    .select('id')
+    .eq('user_id', userData.id)
+    .single();
+  if (buyerError || !buyerData) {
+    return (
+      <main className="max-w-lg mx-auto px-4 py-20 text-center">
+        <h1 className="text-2xl font-bold mb-4">No purchases found</h1>
+        <p className="text-center">No buyer found for {trimmedEmail}.</p>
+        <div className="mt-8 text-center">
+          <Link href="/">Back to templates</Link>
+        </div>
+      </main>
+    );
+  }
+
   const { data, error } = await supabase
     .from("orders")
     .select("template_id, created_at")
-    .eq("email", trimmedEmail)
+    .eq("buyer_id", buyerData.id)
     .order("created_at", { ascending: false });
 
   if (error) {
