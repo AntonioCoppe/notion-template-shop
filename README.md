@@ -35,21 +35,27 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
-## Orders table
+## Database schema
 
-Create this table in Supabase to store completed purchases:
+The tables used by this project can be created in Supabase using the SQL script
+found at `supabase/schema.sql`.
 
-```sql
-create table orders (
-  id uuid primary key default uuid_generate_v4(),
-  email text not null,
-  template_id text not null,
-  price_id text not null,
-  session_id text not null,
-  created_at timestamptz default current_timestamp
-);
-
-create index orders_email_idx on orders(email);
+```mermaid
+erDiagram
+  users ||--o{ vendors : ""
+  users ||--o{ orders : ""
+  vendors ||--o{ templates : ""
+  templates ||--o{ orders : ""
 ```
+
+Tables and columns:
+
+- **users**: `id`, `email`
+- **vendors**: `id`, `user_id`, `stripe_account_id`
+- **templates**: `id`, `vendor_id`, `price`, `notion_url`
+- **orders**: `id`, `template_id`, `buyer_email`, `stripe_session_id`, `amount`
+
+Row-level security policies ensure a vendor can only read templates that belong
+to them.
 
 Environment variables are documented in `.env.example`.
