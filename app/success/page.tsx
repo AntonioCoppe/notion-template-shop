@@ -1,7 +1,7 @@
 import Stripe from "stripe";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import templates from "@/app/templates";
+import { getSupabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +21,29 @@ export default async function Success({
   const line = session.line_items?.data[0];
   const product = line?.price?.product as Stripe.Product | undefined;
   const priceId = line?.price?.id;
-  const template = templates.find((t) => t.priceId === priceId);
+
+  // Fetch template from database if we have a price ID
+  let template = null;
+  if (priceId) {
+    try {
+      const price = await stripe.prices.retrieve(priceId);
+      const productId = price.product as string;
+      const templateId = productId.replace('template_', '');
+
+      const supabase = getSupabase();
+      const { data, error } = await supabase
+        .from("templates")
+        .select("*")
+        .eq("id", templateId)
+        .single();
+
+      if (!error && data) {
+        template = data;
+      }
+    } catch (error) {
+      console.error("Error fetching template:", error);
+    }
+  }
 
   return (
     <main className="max-w-xl mx-auto px-4 py-20 text-center">
@@ -32,7 +54,7 @@ export default async function Success({
             You bought <strong>{product.name}</strong>. {" "}
             {template ? (
               <>
-                <a href={template.notionUrl} className="underline text-blue-600" target="_blank">
+                <a href={template.notion_url} className="underline text-blue-600" target="_blank">
                   Duplicate your template
                 </a>{" "}
                 or find it in your inbox.

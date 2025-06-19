@@ -29,6 +29,7 @@ CREATE TABLE templates (
   id         uuid        PRIMARY KEY DEFAULT uuid_generate_v4(),
   vendor_id  uuid        NOT NULL
     REFERENCES vendors(id)   ON DELETE CASCADE,
+  title      text        NOT NULL,
   price      numeric(10,2) NOT NULL,
   notion_url text        NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now()

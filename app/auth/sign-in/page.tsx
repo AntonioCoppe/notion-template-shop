@@ -22,7 +22,11 @@ export default function SignIn() {
       password,
     });
     if (error) {
-      setError(error.message);
+      if (error.message.includes("Email not confirmed")) {
+        setError("Please check your email and click the confirmation link before signing in.");
+      } else {
+        setError(error.message);
+      }
       setLoading(false);
       return;
     }
@@ -50,7 +54,19 @@ export default function SignIn() {
           placeholder="Password"
           className="border px-3 py-2 rounded w-full text-black"
         />
-        {error && <p className="text-red-600 text-sm">{error}</p>}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded p-3">
+            <p className="text-red-600 text-sm">{error}</p>
+            {error.includes("confirmation") && (
+              <p className="text-red-500 text-xs mt-1">
+                Can&apos;t find the email? Check your spam folder or{" "}
+                <Link href="/auth/sign-up" className="underline">
+                  sign up again
+                </Link>
+              </p>
+            )}
+          </div>
+        )}
         <button
           type="submit"
           disabled={loading}

@@ -22,6 +22,20 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Features
+
+### Vendor Onboarding & Dashboard
+- **Protected Route**: `/vendor` - Only accessible to authenticated vendors
+- **Stripe Connect Integration**: Vendors can connect their Stripe accounts to receive payments
+- **Template Management**: Vendors can add, view, and manage their templates
+- **Real-time Updates**: Templates are fetched from the database and displayed on the main page
+
+### Buyer Experience
+- **Browse Templates**: View all available templates from connected vendors
+- **Purchase Flow**: Buy templates through Stripe Checkout
+- **Email Delivery**: Receive template links via email after purchase
+- **Order History**: View past purchases on the account page
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
@@ -45,19 +59,30 @@ found at `supabase/schema.sql`.
 ```mermaid
 erDiagram
   users ||--o{ vendors : ""
-  users ||--o{ orders : ""
+  users ||--o{ buyers : ""
   vendors ||--o{ templates : ""
   templates ||--o{ orders : ""
+  buyers ||--o{ orders : ""
 ```
 
 Tables and columns:
 
-- **users**: `id`, `email`
-- **vendors**: `id`, `user_id`, `stripe_account_id`
-- **templates**: `id`, `vendor_id`, `price`, `notion_url`
-- **orders**: `id`, `template_id`, `buyer_email`, `stripe_session_id`, `amount`
+- **auth.users**: `id`, `email`, `user_metadata.role`
+- **vendors**: `id`, `user_id`, `stripe_account_id`, `created_at`
+- **templates**: `id`, `vendor_id`, `title`, `price`, `notion_url`, `created_at`
+- **buyers**: `id`, `user_id`, `created_at`
+- **orders**: `id`, `template_id`, `buyer_id`, `amount`, `status`, `created_at`
 
-Row-level security policies ensure a vendor can only read templates that belong
-to them.
+## Environment Variables
 
-Environment variables are documented in `.env.example`.
+Required environment variables:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+STRIPE_SECRET_KEY=your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+RESEND_API_KEY=your_resend_api_key
+NEXT_PUBLIC_SITE_URL=your_site_url
+```

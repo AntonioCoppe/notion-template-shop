@@ -10,7 +10,6 @@ type Props = {
   price: number;
   img: string;
   description: string;
-  priceId: string;
 };
 
 export default function TemplateCard({
@@ -19,7 +18,6 @@ export default function TemplateCard({
   price,
   img,
   description,
-  priceId,
 }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -33,7 +31,7 @@ export default function TemplateCard({
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ priceId, email }),
+        body: JSON.stringify({ templateId: id, email }),
       });
 
       if (!res.ok) throw new Error("Checkout session failed");

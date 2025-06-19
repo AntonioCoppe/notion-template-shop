@@ -1,8 +1,296 @@
-export default function VendorPage() {
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useSupabaseUser } from "@/lib/useSupabaseUser";
+import { getBrowserSupabase } from "@/lib/supabase-browser";
+
+interface Template {
+  id: string;
+  title: string;
+  price: number;
+  notion_url: string;
+  created_at: string;
+}
+
+interface Vendor {
+  id: string;
+  stripe_account_id: string | null;
+}
+
+export default function VendorDashboard() {
+  const { user, loading } = useSupabaseUser();
+  const router = useRouter();
+  const [vendor, setVendor] = useState<Vendor | null>(null);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [connectingStripe, setConnectingStripe] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newTemplate, setNewTemplate] = useState({
+    title: "",
+    price: "",
+    notion_url: ""
+  });
+
+  // Redirect if not authenticated or not a vendor
+  useEffect(() => {
+    if (!loading && (!user || user.user_metadata?.role !== "vendor")) {
+      router.push("/auth/sign-in");
+    }
+  }, [user, loading, router]);
+
+  const fetchVendorData = useCallback(async () => {
+    const supabase = getBrowserSupabase();
+    const { data, error } = await supabase
+      .from("vendors")
+      .select("*")
+      .eq("user_id", user?.id)
+      .single();
+
+    if (error && error.code !== "PGRST116") {
+      console.error("Error fetching vendor:", error);
+      return;
+    }
+
+    if (data) {
+      setVendor(data);
+    } else {
+      // Create vendor record if it doesn't exist
+      const { data: newVendor, error: createError } = await supabase
+        .from("vendors")
+        .insert({ user_id: user?.id })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error("Error creating vendor:", createError);
+        return;
+      }
+
+      setVendor(newVendor);
+    }
+  }, [user?.id]);
+
+  const fetchTemplates = useCallback(async () => {
+    if (!vendor) return;
+    
+    const supabase = getBrowserSupabase();
+    const { data, error } = await supabase
+      .from("templates")
+      .select("*")
+      .eq("vendor_id", vendor.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching templates:", error);
+      return;
+    }
+
+    setTemplates(data || []);
+  }, [vendor]);
+
+  // Fetch vendor data
+  useEffect(() => {
+    if (user) {
+      fetchVendorData();
+    }
+  }, [user, fetchVendorData]);
+
+  // Fetch templates when vendor is available
+  useEffect(() => {
+    if (vendor) {
+      fetchTemplates();
+    }
+  }, [vendor, fetchTemplates]);
+
+  const connectStripe = async () => {
+    setConnectingStripe(true);
+    try {
+      const response = await fetch("/api/stripe/connect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vendorId: vendor?.id }),
+      });
+
+      if (!response.ok) throw new Error("Failed to create Stripe account");
+      
+      const { url } = await response.json();
+      window.location.href = url;
+    } catch (error) {
+      console.error("Error connecting Stripe:", error);
+      alert("Failed to connect Stripe. Please try again.");
+    } finally {
+      setConnectingStripe(false);
+    }
+  };
+
+  const addTemplate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!vendor) return;
+
+    const supabase = getBrowserSupabase();
+    const { error } = await supabase
+      .from("templates")
+      .insert({
+        vendor_id: vendor.id,
+        title: newTemplate.title,
+        price: parseFloat(newTemplate.price),
+        notion_url: newTemplate.notion_url
+      });
+
+    if (error) {
+      console.error("Error adding template:", error);
+      alert("Failed to add template. Please try again.");
+      return;
+    }
+
+    setNewTemplate({ title: "", price: "", notion_url: "" });
+    setShowAddForm(false);
+    fetchTemplates();
+  };
+
+  const signOut = async () => {
+    const supabase = getBrowserSupabase();
+    await supabase.auth.signOut();
+    router.push("/");
+  };
+
+  if (loading) {
+    return (
+      <main className="max-w-4xl mx-auto px-4 py-8">
+        <div className="text-center">Loading...</div>
+      </main>
+    );
+  }
+
+  if (!user || user.user_metadata?.role !== "vendor") {
+    return null;
+  }
+
   return (
-    <main className="max-w-md mx-auto px-4 py-20">
-      <h1 className="text-2xl font-bold mb-4 text-center">Vendor Page</h1>
-      <p className="text-center">Welcome, vendor! This is your vendor page.</p>
+    <main className="max-w-4xl mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Vendor Dashboard</h1>
+        <div className="flex gap-4 items-center">
+          <span className="text-sm text-gray-600">Welcome, {user.email}</span>
+          <button
+            onClick={signOut}
+            className="text-sm underline text-blue-600 hover:text-blue-800"
+          >
+            Sign out
+          </button>
+        </div>
+      </div>
+
+      {/* Stripe Connect Section */}
+      <div className="bg-gray-50 p-6 rounded-lg mb-8">
+        <h2 className="text-xl font-semibold mb-4">Stripe Integration</h2>
+        {vendor?.stripe_account_id ? (
+          <div className="flex items-center gap-2">
+            <span className="text-green-600">✓ Connected to Stripe</span>
+            <span className="text-sm text-gray-500">
+              Account ID: {vendor.stripe_account_id}
+            </span>
+          </div>
+        ) : (
+          <div>
+            <p className="text-gray-600 mb-4">
+              Connect your Stripe account to start receiving payments for your templates.
+            </p>
+            <button
+              onClick={connectStripe}
+              disabled={connectingStripe}
+              className={`bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 ${
+                connectingStripe ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              {connectingStripe ? "Connecting..." : "Connect Stripe"}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Templates Section */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Your Templates</h2>
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
+          >
+            {showAddForm ? "Cancel" : "Add Template"}
+          </button>
+        </div>
+
+        {/* Add Template Form */}
+        {showAddForm && (
+          <form onSubmit={addTemplate} className="bg-gray-50 p-6 rounded-lg mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <input
+                type="text"
+                placeholder="Template Title"
+                value={newTemplate.title}
+                onChange={(e) => setNewTemplate({ ...newTemplate, title: e.target.value })}
+                required
+                className="border px-3 py-2 rounded text-black"
+              />
+              <input
+                type="number"
+                step="0.01"
+                placeholder="Price ($)"
+                value={newTemplate.price}
+                onChange={(e) => setNewTemplate({ ...newTemplate, price: e.target.value })}
+                required
+                className="border px-3 py-2 rounded text-black"
+              />
+              <input
+                type="url"
+                placeholder="Notion Share URL"
+                value={newTemplate.notion_url}
+                onChange={(e) => setNewTemplate({ ...newTemplate, notion_url: e.target.value })}
+                required
+                className="border px-3 py-2 rounded text-black"
+              />
+            </div>
+            <button
+              type="submit"
+              className="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            >
+              Add Template
+            </button>
+          </form>
+        )}
+
+        {/* Templates List */}
+        {templates.length > 0 ? (
+          <div className="grid gap-4">
+            {templates.map((template) => (
+              <div key={template.id} className="border p-4 rounded-lg">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-semibold text-lg">{template.title}</h3>
+                    <p className="text-gray-600">${template.price}</p>
+                    <a
+                      href={template.notion_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 underline text-sm"
+                    >
+                      View Template
+                    </a>
+                  </div>
+                  <span className="text-sm text-gray-500">
+                    {new Date(template.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-600 text-center py-8">
+            No templates yet. Add your first template to get started!
+          </p>
+        )}
+      </div>
     </main>
   );
 } 

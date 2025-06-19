@@ -2,7 +2,6 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { Resend } from "resend";
-import templates from "@/app/templates";
 import { getSupabase } from "@/lib/supabase";
 
 export const runtime = "nodejs"; // Ensure Buffer is available
@@ -53,11 +52,27 @@ export async function POST(req: Request) {
     });
     const priceId = lineItems.data[0].price?.id;
 
-    // Find the matching template in your in-memory catalogue
-    const template = templates.find((t) => t.priceId === priceId);
-
-    if (template && session.customer_email) {
+    if (priceId && session.customer_email) {
       try {
+        // Get the product ID from the price
+        const price = await stripe.prices.retrieve(priceId);
+        const productId = price.product as string;
+        
+        // Extract template ID from product ID (format: template_<uuid>)
+        const templateId = productId.replace('template_', '');
+
+        // Fetch template from database
+        const { data: template, error: templateError } = await supabase
+          .from("templates")
+          .select("*")
+          .eq("id", templateId)
+          .single();
+
+        if (templateError || !template) {
+          console.error("Template not found:", templateId);
+          return NextResponse.json({ received: true });
+        }
+
         // Look up the buyer by email
         const { data: userData, error: userError } = await supabase
           .from('auth.users')
@@ -65,12 +80,14 @@ export async function POST(req: Request) {
           .eq('email', session.customer_email)
           .single();
         if (userError || !userData) throw new Error('User not found');
+        
         const { data: buyerData, error: buyerError } = await supabase
           .from('buyers')
           .select('id')
           .eq('user_id', userData.id)
           .single();
         if (buyerError || !buyerData) throw new Error('Buyer not found');
+        
         // Store the order in Supabase
         await supabase.from("orders").insert({
           buyer_id: buyerData.id,
@@ -88,7 +105,7 @@ export async function POST(req: Request) {
             <p>Hi there!</p>
             <p>Thanks for purchasing <strong>${template.title}</strong>.</p>
             <p>
-              ➡️ <a href="${template.notionUrl}">Click here to duplicate the template into your workspace</a>
+              ➡️ <a href="${template.notion_url}">Click here to duplicate the template into your workspace</a>
             </p>
             <p>Happy templating,<br/>Antonio @ Notion Template Shop</p>
           `,
@@ -98,7 +115,7 @@ export async function POST(req: Request) {
         console.error("❌ Failed to process order:", (emailErr as Error).message);
       }
     } else {
-      console.warn("⚠️ No template match or missing customer email");
+      console.warn("⚠️ No price ID or missing customer email");
     }
   }
 

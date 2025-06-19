@@ -12,6 +12,7 @@ export default function SignUp() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState("buyer");
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -33,13 +34,52 @@ export default function SignUp() {
         setLoading(false);
         return;
       }
-      router.push(role === "vendor" ? "/vendor" : "/dashboard");
+      
+      // Check if email confirmation is required
+      if (data.user && !data.session) {
+        // Email confirmation required
+        setShowConfirmation(true);
+        setLoading(false);
+      } else if (data.session) {
+        // User is immediately signed in (email confirmation not required)
+        router.push(role === "vendor" ? "/vendor" : "/dashboard");
+      }
     } catch (err) {
       console.error('Unexpected error during sign up:', err);
       setError('Unexpected error during sign up.');
       setLoading(false);
     }
   };
+
+  if (showConfirmation) {
+    return (
+      <main className="max-w-md mx-auto px-4 py-20">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Check your email</h1>
+          <p className="text-gray-600 mb-6">
+            We&apos;ve sent a confirmation link to <strong>{email}</strong>
+          </p>
+          <p className="text-sm text-gray-500 mb-6">
+            Click the link in your email to confirm your account and start using the platform.
+          </p>
+          <div className="space-y-3">
+            <Link
+              href="/auth/sign-in"
+              className="block bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
+            >
+              Go to Sign In
+            </Link>
+            <button
+              onClick={() => setShowConfirmation(false)}
+              className="block w-full text-sm underline text-gray-600 hover:text-gray-800"
+            >
+              Back to Sign Up
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="max-w-md mx-auto px-4 py-20">
