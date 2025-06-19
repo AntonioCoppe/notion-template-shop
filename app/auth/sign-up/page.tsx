@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
 
 export default function SignUp() {
@@ -61,6 +62,12 @@ export default function SignUp() {
           {loading ? "Signing up…" : "Sign up"}
         </button>
       </form>
+      <p className="text-center text-sm mt-4">
+        Already have an account?{' '}
+        <Link href="/auth/sign-in" className="underline">
+          Sign in
+        </Link>
+      </p>
     </main>
   );
 }

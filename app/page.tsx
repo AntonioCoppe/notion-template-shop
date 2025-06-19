@@ -1,11 +1,20 @@
 import TemplateCard from "./template-card";
 import templates from "./templates";
+import Link from "next/link";
 
 export const revalidate = 0;  // or force-dynamic, if you like
 
 export default function Home() {
   return (
     <main className="mx-auto max-w-5xl px-4 py-10">
+      <header className="flex justify-end gap-4 mb-8">
+        <Link href="/auth/sign-in" className="underline">
+          Sign in
+        </Link>
+        <Link href="/auth/sign-up" className="underline">
+          Sign up
+        </Link>
+      </header>
       <h1 className="text-4xl font-bold mb-8 text-center">
         Notion Template Shop
       </h1>
