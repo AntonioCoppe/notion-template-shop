@@ -23,7 +23,19 @@ export default function Home() {
     <main className="mx-auto max-w-5xl px-4 py-10">
       <header className="flex justify-end gap-4 mb-8 items-center">
         {user && user.user_metadata?.role === "buyer" && (
-          <span className="mr-4 text-sm text-gray-700">Signed in as {user.email}</span>
+          <>
+            <span className="mr-4 text-sm text-gray-700">Signed in as {user.email}</span>
+            <button
+              onClick={async () => {
+                const supabase = getBrowserSupabase();
+                await supabase.auth.signOut();
+                window.location.reload();
+              }}
+              className="text-sm underline text-blue-600 hover:text-blue-800 mr-4"
+            >
+              Sign out
+            </button>
+          </>
         )}
         <Link href="/auth/sign-in" className="underline">
           Sign in
