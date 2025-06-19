@@ -5,11 +5,13 @@ drop table if exists orders cascade;
 drop table if exists templates cascade;
 drop table if exists vendors cascade;
 drop table if exists users cascade;
+drop table if exists buyers cascade;
 
 -- Users table
 create table if not exists users (
   id uuid primary key default uuid_generate_v4(),
-  email text not null unique
+  email text not null unique,
+  role text
 );
 
 -- Vendors belong to users
@@ -52,3 +54,41 @@ create policy "Vendor can read own templates" on templates
         and v.user_id = auth.uid()
     )
   );
+
+-- Buyers belong to users
+create table if not exists buyers (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references users(id) on delete cascade
+);
+
+-- In Supabase SQL editor
+
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  -- Insert into users table with role
+  insert into public.users (id, email, role)
+  values (new.id, new.email, new.raw_user_meta_data->>'role')
+  on conflict do nothing;
+
+  -- If the user is a vendor, insert into vendors table
+  if new.raw_user_meta_data->>'role' = 'vendor' then
+    insert into public.vendors (user_id)
+    values (new.id);
+  end if;
+
+  -- If the user is a buyer, insert into buyers table
+  if new.raw_user_meta_data->>'role' = 'buyer' then
+    insert into public.buyers (user_id)
+    values (new.id);
+  end if;
+
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists on_auth_user_created on auth.users;
+
+create trigger on_auth_user_created
+after insert on auth.users
+for each row execute procedure public.handle_new_user();

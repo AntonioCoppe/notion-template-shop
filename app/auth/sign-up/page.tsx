@@ -11,17 +11,18 @@ export default function SignUp() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState("buyer");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     const supabase = getBrowserSupabase();
-    const { data, error } = await supabase.auth.signUp({
+    const { /* data, */ error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { role: "buyer" },
+        data: { role },
       },
     });
     if (error) {
@@ -29,7 +30,6 @@ export default function SignUp() {
       setLoading(false);
       return;
     }
-    const role = data.user?.user_metadata?.role;
     router.push(role === "vendor" ? "/vendor" : "/dashboard");
   };
 
@@ -53,6 +53,30 @@ export default function SignUp() {
           placeholder="Password"
           className="border px-3 py-2 rounded w-full text-black"
         />
+        <div className="flex gap-4 items-center">
+          <label className="flex items-center gap-1">
+            <input
+              type="radio"
+              name="role"
+              value="buyer"
+              checked={role === "buyer"}
+              onChange={() => setRole("buyer")}
+              className="accent-black"
+            />
+            Buyer
+          </label>
+          <label className="flex items-center gap-1">
+            <input
+              type="radio"
+              name="role"
+              value="vendor"
+              checked={role === "vendor"}
+              onChange={() => setRole("vendor")}
+              className="accent-black"
+            />
+            Vendor
+          </label>
+        </div>
         {error && <p className="text-red-600 text-sm">{error}</p>}
         <button
           type="submit"
