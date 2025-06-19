@@ -6,7 +6,6 @@ import { getBrowserSupabase } from "@/lib/supabase-browser";
 
 export default function SignIn() {
   const router = useRouter();
-  const supabase = getBrowserSupabase();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -16,6 +15,7 @@ export default function SignIn() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    const supabase = getBrowserSupabase();
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
