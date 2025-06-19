@@ -42,7 +42,7 @@ export default function VendorDashboard() {
     const supabase = getBrowserSupabase();
     const { data, error } = await supabase
       .from("vendors")
-      .select("*")
+      .select("id, user_id, stripe_account_id")
       .eq("user_id", user?.id)
       .single();
 

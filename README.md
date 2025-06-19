@@ -25,12 +25,14 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 ## Features
 
 ### Vendor Onboarding & Dashboard
+
 - **Protected Route**: `/vendor` - Only accessible to authenticated vendors
 - **Stripe Connect Integration**: Vendors can connect their Stripe accounts to receive payments
 - **Template Management**: Vendors can add, view, and manage their templates
 - **Real-time Updates**: Templates are fetched from the database and displayed on the main page
 
 ### Buyer Experience
+
 - **Browse Templates**: View all available templates from connected vendors
 - **Purchase Flow**: Buy templates through Stripe Checkout
 - **Email Delivery**: Receive template links via email after purchase

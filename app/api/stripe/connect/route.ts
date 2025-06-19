@@ -34,18 +34,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // First, get the vendor data including user email
+    // First, get the vendor data with user email
     const supabase = getSupabase();
     const { data: vendor, error: vendorError } = await supabase
       .from("vendors")
-      .select(`
-        id,
-        user_id,
-        stripe_account_id,
-        users!inner(
-          email
-        )
-      `)
+      .select("id, user_id, stripe_account_id")
       .eq("id", vendorId)
       .single();
 
@@ -65,9 +58,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Access the user email from the nested structure
-    const users = vendor.users as { email: string }[];
-    const userEmail = users[0]?.email;
+    // Get the user email using the admin API
+    const { data: user, error: userError } = await supabase.auth.admin.getUserById(vendor.user_id);
+
+    if (userError || !user.user) {
+      console.error("Error fetching user:", userError);
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    const userEmail = user.user.email;
 
     if (!userEmail) {
       return NextResponse.json(

@@ -5,6 +5,7 @@ This guide will help you set up Stripe Connect to handle vendor payments with co
 ## 🚀 Quick Setup Steps
 
 ### 1. Create a Stripe Account
+
 1. Go to [stripe.com](https://stripe.com) and create an account
 2. Complete your business verification
 3. Get your API keys from the Stripe Dashboard
@@ -78,6 +79,7 @@ payment_intent_data: {
 ```
 
 To change the commission rate, modify the calculation:
+
 - **5% commission**: `Math.round(template.price * 5)`
 - **15% commission**: `Math.round(template.price * 15)`
 - **Fixed $2 fee**: `200` (amount in cents)
@@ -92,6 +94,7 @@ To change the commission rate, modify the calculation:
 ### 2. Test Cards
 
 Use these test card numbers:
+
 - **Success**: `4242 4242 4242 4242`
 - **Decline**: `4000 0000 0000 0002`
 - **Requires Authentication**: `4000 0025 0000 3155`
@@ -110,11 +113,13 @@ Use these test card numbers:
 ### Issue: "Failed to create Stripe account"
 
 **Possible causes:**
+
 - Missing environment variables
 - Invalid Stripe API key
 - Database connection issues
 
 **Solutions:**
+
 1. Check all environment variables are set
 2. Verify Stripe API key is correct
 3. Check Supabase connection
@@ -123,6 +128,7 @@ Use these test card numbers:
 ### Issue: "Email not confirmed"
 
 **Solution:**
+
 - Check your email and click the confirmation link
 - Check spam folder
 - Try signing up again
@@ -130,6 +136,7 @@ Use these test card numbers:
 ### Issue: "Vendor not connected to Stripe"
 
 **Solution:**
+
 - Make sure vendor completed Stripe onboarding
 - Check vendor has `stripe_account_id` in database
 - Reconnect Stripe if needed
@@ -137,6 +144,7 @@ Use these test card numbers:
 ### Issue: Webhook not working
 
 **Solutions:**
+
 1. Check webhook URL is correct
 2. Verify webhook secret in environment variables
 3. Test webhook endpoint manually
@@ -145,12 +153,14 @@ Use these test card numbers:
 ## 📊 Monitoring & Analytics
 
 ### Stripe Dashboard
+
 - **Payments**: View all transactions
 - **Connect**: Monitor vendor accounts
 - **Reports**: Generate revenue reports
 - **Disputes**: Handle chargebacks
 
 ### Your Platform
+
 - **Orders table**: Track all purchases
 - **Vendor dashboard**: Vendor-specific analytics
 - **Webhook logs**: Monitor payment processing
@@ -186,6 +196,7 @@ To change commission rates, update these files:
 3. **Vendor terms** - Update vendor agreements
 
 Example: Change to 15% commission
+
 ```typescript
 application_fee_amount: Math.round(template.price * 15), // 15% platform fee
-``` 
+```

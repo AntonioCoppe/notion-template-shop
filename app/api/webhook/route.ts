@@ -98,7 +98,7 @@ export async function POST(req: Request) {
 
         // Send the Notion duplicate link via email
         await resend.emails.send({
-          from: "Notion Template Shop <support@notiontemplateshop.com>",
+          from: "Notion Template Shop <noreply@notiontemplateshop.com>",
           to: session.customer_email,
           subject: `Your ${template.title} Notion template`,
           html: `
