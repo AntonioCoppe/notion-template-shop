@@ -18,19 +18,27 @@ export default function SignUp() {
     setLoading(true);
     setError(null);
     const supabase = getBrowserSupabase();
-    const { /* data, */ error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { role },
-      },
-    });
-    if (error) {
-      setError(error.message);
+    console.log('Attempting sign up with:', { email, password, role });
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { role },
+        },
+      });
+      console.log('Supabase signUp response:', { data, error });
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
+      router.push(role === "vendor" ? "/vendor" : "/dashboard");
+    } catch (err) {
+      console.error('Unexpected error during sign up:', err);
+      setError('Unexpected error during sign up.');
       setLoading(false);
-      return;
     }
-    router.push(role === "vendor" ? "/vendor" : "/dashboard");
   };
 
   return (

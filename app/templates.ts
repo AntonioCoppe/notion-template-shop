@@ -6,16 +6,16 @@ const templates = [
     priceId: "price_1Rakf1GHXWTZ0uYsInqgtoks", // <- from `stripe prices list`
     img: "/freelancer.jpg",
     description: "Track clients, invoices and deadlines in one place.",
-    notionUrl: "https://www.notion.so/duplicate-link",
+    notionUrl: "https://yudax.notion.site/The-Freelancer-dashboard-88a2034a2585497d8a0419b576aa3f3b",
   },
   {
     id: "personal-crm",
-    title: "Personal CRM",
+    title: "Reading List",
     price: 1.00,
     priceId: "price_1RakcBGHXWTZ0uYsSiu5Nc6G",
-    img: "/crm.jpg",
-    description: "Never forget a birthday or follow-up again.",
-    notionUrl: "https://www.notion.so/duplicate-link-placeholder",
+    img: "/reading-list.png",
+    description: "Keep track of your favourite books.",
+    notionUrl: "https://www.notion.so/67f08bb0d02247f99a816d0a291e61de?v=5816ec73e61b4b5ab3dde64b86fb4e87&source=copy_link",
   },
 ];
 export default templates;
