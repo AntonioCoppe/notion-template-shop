@@ -51,45 +51,10 @@ export default function Home() {
     fetchTemplates();
   }, []);
 
-  const handleSignOut = async () => {
-    const supabase = getBrowserSupabase();
-    await supabase.auth.signOut();
-    window.location.reload();
-  };
-
   return (
     <main className="mx-auto max-w-5xl px-4 py-10">
       <header className="flex justify-end gap-4 mb-8 items-center">
-        {user ? (
-          <>
-            <span className="mr-4 text-sm text-gray-700">
-              Signed in as {user.email} ({user.user_metadata?.role})
-            </span>
-            {user.user_metadata?.role === "vendor" && (
-              <Link
-                href="/vendor"
-                className="text-sm underline text-blue-600 hover:text-blue-800 mr-4"
-              >
-                Vendor Dashboard
-              </Link>
-            )}
-            <button
-              onClick={handleSignOut}
-              className="text-sm underline text-blue-600 hover:text-blue-800 mr-4"
-            >
-              Sign out
-            </button>
-          </>
-        ) : (
-          <>
-            <Link href="/auth/sign-in" className="underline">
-              Sign in
-            </Link>
-            <Link href="/auth/sign-up" className="underline">
-              Sign up
-            </Link>
-          </>
-        )}
+        {/* Auth buttons moved to Navbar */}
       </header>
       <h1 className="text-4xl font-bold mb-8 text-center">
         Notion Template Shop

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import Link from "next/link";
 
 type Props = {
   id: string;
@@ -20,28 +20,14 @@ export default function TemplateCard({
   description,
 }: Props) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
 
-  const handleBuy = async () => {
-    const email = prompt("Where should we send your template link?")?.trim();
-    if (!email) return;
-
-    setLoading(true);
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ templateId: id, email }),
-      });
-
-      if (!res.ok) throw new Error("Checkout session failed");
-      const { url } = await res.json();
-      router.push(url); // Stripe Checkout
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong – please try again.");
-      setLoading(false);
+  const handleBuy = () => {
+    const cart: Props[] = JSON.parse(localStorage.getItem("cart") || "[]");
+    if (!cart.find((item) => item.id === id)) {
+      cart.push({ id, title, price, img, description });
+      localStorage.setItem("cart", JSON.stringify(cart));
     }
+    router.push("/cart");
   };
 
   return (
@@ -49,26 +35,28 @@ export default function TemplateCard({
       data-template-id={id}
       className="border rounded-xl p-4 flex flex-col gap-4 shadow card"
     >
-      <Image
-        src={img}
-        alt={title}
-        width={400}
-        height={250}
-        className="rounded-lg object-cover"
-        priority={id === "freelancer-dashboard"}
-        style={{ width: "auto", height: "auto" }}
-      />
-      <h2 className="text-xl font-semibold">{title}</h2>
+      <Link href={`/templates/${id}`}>
+        <Image
+          src={img}
+          alt={title}
+          width={400}
+          height={250}
+          className="rounded-lg object-cover"
+          priority={id === "freelancer-dashboard"}
+          style={{ width: "auto", height: "auto" }}
+        />
+      </Link>
+      <Link href={`/templates/${id}`} className="text-xl font-semibold hover:underline block">
+        {title}
+      </Link>
       <p className="text-sm text-gray-600 flex-grow">{description}</p>
+      <Link href={`/templates/${id}`} className="text-blue-600 hover:underline text-sm mb-2">View details</Link>
 
       <button
         onClick={handleBuy}
-        disabled={loading}
-        className={`mt-2 rounded bg-black text-white py-2 hover:opacity-90 ${
-          loading ? "opacity-50 cursor-not-allowed" : ""
-        } btn-primary`}
+        className="mt-2 rounded bg-black text-white py-2 hover:opacity-90 btn-primary"
       >
-        {loading ? "Redirecting…" : `Buy for $${price}`}
+        {`Buy for $${price}`}
       </button>
     </div>
   );

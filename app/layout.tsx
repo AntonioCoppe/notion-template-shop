@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Image from "next/image";
+import Navbar from "./Navbar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,6 +45,7 @@ export default function RootLayout({
             Notion Templates Shop
           </span>
         </header>
+        <Navbar />
         {children}
         <footer className="w-full border-t border-gray-200 mt-12 py-6 bg-white">
           <div className="max-w-2xl mx-auto flex flex-col md:flex-row justify-center items-center gap-4 text-sm text-gray-600">
