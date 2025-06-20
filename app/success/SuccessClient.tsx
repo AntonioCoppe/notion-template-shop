@@ -3,13 +3,17 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import Stripe from "stripe";
+
+interface Template {
+  id: string;
+  title: string;
+}
 
 export default function SuccessClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const sessionId = searchParams.get("session_id");
-  const [lineItems, setLineItems] = useState<Stripe.LineItem[]>([]);
+  const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,25 +22,39 @@ export default function SuccessClient() {
       return;
     }
 
-    async function fetchSession(): Promise<void> {
+    async function fetchTemplates(templateIds: string[]): Promise<void> {
       setLoading(true);
       try {
-        const res = await fetch(`/api/stripe/session?session_id=${sessionId}`);
-        if (!res.ok) throw new Error("Failed to fetch session");
-        interface SessionResponse {
-          lineItems: Stripe.LineItem[];
-        }
-        const data = (await res.json()) as SessionResponse;
-        setLineItems(data.lineItems || []);
+        const res = await fetch(`/api/templates/by-ids?ids=${templateIds.join(',')}`);
+        if (!res.ok) throw new Error("Failed to fetch templates");
+        const data = await res.json();
+        setTemplates(data || []);
       } catch (e: unknown) {
-        console.error("Failed to fetch session:", e);
-        setLineItems([]);
+        console.error("Failed to fetch templates:", e);
+        setTemplates([]);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchSession();
+    async function fetchSessionAndTemplates(): Promise<void> {
+      try {
+        const sessionRes = await fetch(`/api/stripe/checkout-session?session_id=${sessionId}`);
+        if (!sessionRes.ok) throw new Error("Failed to fetch session");
+        const session = await sessionRes.json();
+        const templateIds = session.metadata?.template_ids?.split(',');
+        if (templateIds && templateIds.length > 0) {
+          await fetchTemplates(templateIds);
+        } else {
+          setLoading(false);
+        }
+      } catch (e) {
+        console.error(e);
+        setLoading(false);
+      }
+    }
+
+    fetchSessionAndTemplates();
   }, [sessionId, router]);
 
   return (
@@ -44,20 +62,17 @@ export default function SuccessClient() {
       <h1 className="text-3xl font-bold mb-6">Thanks for your purchase! 🎉</h1>
       {loading ? (
         <p>Retrieving your order…</p>
-      ) : lineItems.length > 0 ? (
+      ) : templates.length > 0 ? (
         <>
           <p className="mb-4">
             You bought the following templates. You will also receive an email with the links.
           </p>
           <ul className="text-left mb-6 bg-gray-50 p-4 rounded-lg space-y-2">
-            {lineItems.map((item: Stripe.LineItem) => {
-              const product = item.price?.product as Stripe.Product | undefined;
-              return (
-                <li key={product?.id || item.id} className="font-semibold">
-                  - {product?.name || 'A template'}
-                </li>
-              );
-            })}
+            {templates.map((template) => (
+              <li key={template.id} className="font-semibold">
+                - {template.title}
+              </li>
+            ))}
           </ul>
           <p className="mb-4">
             Lost it later? Enter your email on the{' '}
@@ -74,7 +89,7 @@ export default function SuccessClient() {
           </Link>
         </>
       ) : (
-        <p>Could not find your order.</p>
+        <p>Could not find your order details.</p>
       )}
     </main>
   );

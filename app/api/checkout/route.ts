@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getSupabase } from "@/lib/supabase";
 
+type Vendor = {
+  stripe_account_id: string;
+}
+
 export async function POST(req: NextRequest) {
   if (!process.env.STRIPE_SECRET_KEY) {
     console.error("Missing STRIPE_SECRET_KEY environment variable");
@@ -16,18 +20,19 @@ export async function POST(req: NextRequest) {
   });
 
   try {
-    const { templateId, email } = await req.json();
+    const { cartDetails, email } = await req.json();
 
-    if (!templateId || !email) {
+    if (!cartDetails || !email) {
       return NextResponse.json(
-        { error: "Missing templateId or email in request" },
+        { error: "Missing cartDetails or email in request" },
         { status: 400 }
       );
     }
 
-    // Fetch template from database
+    const templateIds = cartDetails.map((item: { id: string }) => item.id);
+    
     const supabase = getSupabase();
-    const { data: template, error: templateError } = await supabase
+    const { data: templates, error: templatesError } = await supabase
       .from("templates")
       .select(`
         id,
@@ -35,71 +40,89 @@ export async function POST(req: NextRequest) {
         price,
         notion_url,
         vendor_id,
-        vendors!inner(
+        vendors (
           stripe_account_id
         )
       `)
-      .eq("id", templateId)
-      .single();
+      .in("id", templateIds);
 
-    if (templateError || !template) {
+    if (templatesError || !templates || templates.length === 0) {
+      console.error("Error fetching templates:", templatesError);
       return NextResponse.json(
-        { error: "Template not found" },
+        { error: "Templates not found" },
         { status: 404 }
       );
     }
+    
+    const firstVendorId = templates[0].vendor_id;
+    const allSameVendor = templates.every(t => t.vendor_id === firstVendorId);
+    
+    if (!allSameVendor) {
+      return NextResponse.json(
+          { error: "You can only purchase templates from one vendor at a time." },
+          { status: 400 }
+      );
+    }
 
-    const vendors = template.vendors as { stripe_account_id: string | null }[];
-    const vendor = vendors[0];
-    if (!vendor?.stripe_account_id) {
+    const vendorStripeAccountId = (templates[0].vendors as Vendor[])[0]?.stripe_account_id;
+    if (!vendorStripeAccountId) {
       return NextResponse.json(
         { error: "Vendor not connected to Stripe" },
         { status: 400 }
       );
     }
 
-    // Create or get Stripe product and price
-    let priceId: string;
-    
-    // Check if we already have a price for this template
-    const existingPrices = await stripe.prices.list({
-      product: `template_${template.id}`,
-      active: true,
-      limit: 1,
-    });
+    const line_items = await Promise.all(
+      templates.map(async (template) => {
+        let priceId: string;
+        const existingPrices = await stripe.prices.list({
+          product: `template_${template.id}`,
+          active: true,
+          limit: 1,
+        });
 
-    if (existingPrices.data.length > 0) {
-      priceId = existingPrices.data[0].id;
-    } else {
-      // Create a new product and price
-      const product = await stripe.products.create({
-        id: `template_${template.id}`,
-        name: template.title,
-        description: `Notion template: ${template.title}`,
-      });
+        if (existingPrices.data.length > 0) {
+          priceId = existingPrices.data[0].id;
+        } else {
+          const product = await stripe.products.create({
+            id: `template_${template.id}`,
+            name: template.title,
+            description: `Notion template: ${template.title}`,
+          });
 
-      const price = await stripe.prices.create({
-        product: product.id,
-        unit_amount: Math.round(template.price * 100), // Convert to cents
-        currency: "usd",
-      });
+          const price = await stripe.prices.create({
+            product: product.id,
+            unit_amount: Math.round(template.price * 100),
+            currency: "usd",
+          });
+          priceId = price.id;
+        }
 
-      priceId = price.id;
-    }
+        return {
+          price: priceId,
+          quantity: 1,
+        };
+      })
+    );
 
-    // Create checkout session
+    const totalAmount = templates.reduce((acc, t) => acc + t.price, 0);
+    const platformFee = totalAmount * 0.10;
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       customer_email: email,
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: line_items,
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/cart`,
       automatic_tax: { enabled: false },
       payment_intent_data: {
-        application_fee_amount: Math.round(template.price * 10), // 10% platform fee
+        application_fee_amount: Math.round(platformFee * 100),
         transfer_data: {
-          destination: vendor.stripe_account_id,
+          destination: vendorStripeAccountId,
         },
+      },
+      metadata: {
+        template_ids: templateIds.join(','),
       },
     });
 

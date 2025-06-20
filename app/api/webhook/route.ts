@@ -46,31 +46,19 @@ export async function POST(req: Request) {
     const session = event.data.object as Stripe.Checkout.Session;
     const supabase = getSupabase();
 
-    // Retrieve line items to get the price ID
-    const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {
-      limit: 1,
-    });
-    const priceId = lineItems.data[0].price?.id;
-
-    if (priceId && session.customer_email) {
+    const templateIds = session.metadata?.template_ids?.split(',');
+    
+    if (templateIds && templateIds.length > 0 && session.customer_email) {
       try {
-        // Get the product ID from the price
-        const price = await stripe.prices.retrieve(priceId);
-        const productId = price.product as string;
-        
-        // Extract template ID from product ID (format: template_<uuid>)
-        const templateId = productId.replace('template_', '');
-
-        // Fetch template from database
-        const { data: template, error: templateError } = await supabase
+        // Fetch templates from database
+        const { data: templates, error: templatesError } = await supabase
           .from("templates")
           .select("*")
-          .eq("id", templateId)
-          .single();
+          .in("id", templateIds);
 
-        if (templateError || !template) {
-          console.error("Template not found:", templateId);
-          return NextResponse.json({ received: true });
+        if (templatesError || !templates || templates.length === 0) {
+          console.error("Templates not found for IDs:", templateIds.join(', '));
+          return NextResponse.json({ received: true }); 
         }
 
         // Look up the buyer by email
@@ -88,34 +76,37 @@ export async function POST(req: Request) {
           .single();
         if (buyerError || !buyerData) throw new Error('Buyer not found');
         
-        // Store the order in Supabase
-        await supabase.from("orders").insert({
+        // Store the orders in Supabase
+        const orders = templates.map(template => ({
           buyer_id: buyerData.id,
           template_id: template.id,
           amount: template.price,
           status: 'paid',
-        });
+        }));
+        await supabase.from("orders").insert(orders);
 
-        // Send the Notion duplicate link via email
+        // Send a single email with all template links
+        const templateLinks = templates.map(t => 
+          `<li><a href="${t.notion_url}">${t.title}</a></li>`
+        ).join('');
+
         await resend.emails.send({
           from: "Notion Template Shop <noreply@notiontemplateshop.com>",
           to: session.customer_email,
-          subject: `Your ${template.title} Notion template`,
+          subject: `Your Notion templates are here!`,
           html: `
             <p>Hi there!</p>
-            <p>Thanks for purchasing <strong>${template.title}</strong>.</p>
-            <p>
-              ➡️ <a href="${template.notion_url}">Click here to duplicate the template into your workspace</a>
-            </p>
+            <p>Thanks for your purchase. Here are your templates:</p>
+            <ul>${templateLinks}</ul>
             <p>Happy templating,<br/>Antonio @ Notion Template Shop</p>
           `,
         });
-        console.log(`✅ Email sent to ${session.customer_email}`);
-      } catch (emailErr) {
-        console.error("❌ Failed to process order:", (emailErr as Error).message);
+        console.log(`✅ Consolidated email sent to ${session.customer_email} for ${templates.length} templates.`);
+      } catch (err) {
+        console.error("❌ Failed to process multi-item order:", (err as Error).message);
       }
     } else {
-      console.warn("⚠️ No price ID or missing customer email");
+      console.warn("⚠️ Missing template_ids in metadata or customer email in session.");
     }
   }
 
