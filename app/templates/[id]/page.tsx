@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import TemplateDetailsClient from "./TemplateDetailsClient";
 
 export default async function TemplateDetails({ params }: { params: { id: string } }) {
