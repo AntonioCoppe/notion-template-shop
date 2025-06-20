@@ -14,6 +14,7 @@ export async function GET(request: Request) {
         title,
         price,
         notion_url,
+        img,
         created_at,
         vendors!inner(
           stripe_account_id
@@ -41,7 +42,7 @@ export async function GET(request: Request) {
       id: template.id,
       title: template.title,
       price: template.price,
-      img: "/freelancer.jpg", // Default image - you might want to add an image field to the database
+      img: template.img, // Use the actual image URL from the database
       description: `${template.title} - A Notion template for your needs.`,
       notionUrl: template.notion_url,
     })) || [];

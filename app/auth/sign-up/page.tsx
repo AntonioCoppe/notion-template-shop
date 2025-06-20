@@ -78,7 +78,7 @@ export default function SignUp() {
           <div className="space-y-3">
             <Link
               href="/auth/sign-in"
-              className="block bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
+              className="block btn-primary"
             >
               Go to Sign In
             </Link>

@@ -28,7 +28,8 @@ export default function VendorDashboard() {
   const [newTemplate, setNewTemplate] = useState({
     title: "",
     price: "",
-    notion_url: ""
+    notion_url: "",
+    file: null as File | null,
   });
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
   const [editTemplate, setEditTemplate] = useState({ title: "", price: "", notion_url: "" });
@@ -129,20 +130,36 @@ export default function VendorDashboard() {
     e.preventDefault();
     if (!vendor) return;
 
-    // Extract OG image from Notion URL
     let imageUrl = "";
-    try {
-      const res = await fetch("/api/extract-og-image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: newTemplate.notion_url }),
-      });
-      const data = await res.json();
-      if (res.ok && data.image) {
-        imageUrl = data.image;
+    if (newTemplate.file) {
+      const supabase = getBrowserSupabase();
+      const fileExt = newTemplate.file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      // Upload the file
+      const { error: uploadError } = await supabase.storage
+        .from('template-images')
+        .upload(fileName, newTemplate.file, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+      console.log('Upload error:', uploadError);
+      if (uploadError) {
+        alert("Failed to upload image.");
+        return;
       }
-    } catch {
-      // Fallback: leave imageUrl empty
+      // Get the public URL
+      const { data: publicUrlData } = supabase.storage
+        .from('template-images')
+        .getPublicUrl(fileName);
+      imageUrl = publicUrlData?.publicUrl || "";
+      if (imageUrl && !imageUrl.includes('/object/public/')) {
+        imageUrl = imageUrl.replace('/object/', '/object/public/');
+      }
+      console.log('Image public URL:', imageUrl); // Debug log
+      if (!imageUrl) {
+        alert("Failed to get public image URL.");
+        return;
+      }
     }
 
     const supabase = getBrowserSupabase();
@@ -157,12 +174,11 @@ export default function VendorDashboard() {
       });
 
     if (error) {
-      console.error("Error adding template:", error);
       alert("Failed to add template. Please try again.");
       return;
     }
 
-    setNewTemplate({ title: "", price: "", notion_url: "" });
+    setNewTemplate({ title: "", price: "", notion_url: "", file: null });
     setShowAddForm(false);
     fetchTemplates();
   };
@@ -289,7 +305,7 @@ export default function VendorDashboard() {
         {/* Add Template Form */}
         {showAddForm && (
           <form onSubmit={addTemplate} className="bg-gray-50 p-6 rounded-lg mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <input
                 type="text"
                 placeholder="Template Title"
@@ -312,6 +328,13 @@ export default function VendorDashboard() {
                 placeholder="Notion Share URL"
                 value={newTemplate.notion_url}
                 onChange={(e) => setNewTemplate({ ...newTemplate, notion_url: e.target.value })}
+                required
+                className="border px-3 py-2 rounded text-black"
+              />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setNewTemplate({ ...newTemplate, file: e.target.files?.[0] || null })}
                 required
                 className="border px-3 py-2 rounded text-black"
               />
