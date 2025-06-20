@@ -1,53 +1,66 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
 
 export default function SignUp() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"buyer" | "vendor">("buyer");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [role, setRole] = useState("buyer");
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const supabase = getBrowserSupabase();
-    console.log('Attempting sign up with:', { email, password, role });
+
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { role },
-        },
+      const res = await fetch("/api/auth/sign-up", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, role }),
       });
-      console.log('Supabase signUp response:', { data, error });
-      if (error) {
-        setError(error.message);
-        setLoading(false);
-        return;
-      }
-      
-      // Check if email confirmation is required
-      if (data.user && !data.session) {
-        // Email confirmation required
+
+      // parse JSON (no more HTML 404)
+      const json = await res.json();
+
+      if (!res.ok) {
+        setError(json.error || "Signup failed");
+      } else {
         setShowConfirmation(true);
-        setLoading(false);
-      } else if (data.session) {
-        // User is immediately signed in (email confirmation not required)
-        router.push(role === "vendor" ? "/vendor" : "/dashboard");
       }
     } catch (err) {
-      console.error('Unexpected error during sign up:', err);
-      setError('Unexpected error during sign up.');
+      console.error("Fetch /api/auth/sign-up error:", err);
+      setError("Unexpected network error");
+    } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendEmail = async () => {
+    setResendLoading(true);
+    setError(null);
+
+    try {
+      const supabase = getBrowserSupabase();
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+      });
+      if (error) {
+        setError(error.message);
+      } else {
+        alert("Confirmation email sent! Please check your inbox and spam folder.");
+      }
+    } catch (err) {
+      console.error("Resend confirmation error:", err);
+      setError("Failed to resend email. Please try again.");
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -57,7 +70,7 @@ export default function SignUp() {
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Check your email</h1>
           <p className="text-gray-600 mb-6">
-            We&apos;ve sent a confirmation link to <strong>{email}</strong>
+            We’ve sent a confirmation link to <strong>{email}</strong>
           </p>
           <p className="text-sm text-gray-500 mb-6">
             Click the link in your email to confirm your account and start using the platform.
@@ -70,11 +83,21 @@ export default function SignUp() {
               Go to Sign In
             </Link>
             <button
+              onClick={handleResendEmail}
+              disabled={resendLoading}
+              className={`block w-full text-sm underline text-gray-600 hover:text-gray-800 ${
+                resendLoading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              {resendLoading ? "Sending..." : "Resend confirmation email"}
+            </button>
+            <button
               onClick={() => setShowConfirmation(false)}
               className="block w-full text-sm underline text-gray-600 hover:text-gray-800"
             >
               Back to Sign Up
             </button>
+            {error && <p className="text-red-600 text-sm">{error}</p>}
           </div>
         </div>
       </main>
@@ -129,13 +152,15 @@ export default function SignUp() {
         <button
           type="submit"
           disabled={loading}
-          className={`bg-black text-white px-4 py-2 rounded w-full ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+          className={`bg-black text-white px-4 py-2 rounded w-full ${
+            loading ? "opacity-50 cursor-not-allowed" : ""
+          }`}
         >
           {loading ? "Signing up…" : "Sign up"}
         </button>
       </form>
       <p className="text-center text-sm mt-4">
-        Already have an account?{' '}
+        Already have an account?{" "}
         <Link href="/auth/sign-in" className="underline">
           Sign in
         </Link>

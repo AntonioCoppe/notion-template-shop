@@ -58,12 +58,19 @@ export default function SignIn() {
           <div className="bg-red-50 border border-red-200 rounded p-3">
             <p className="text-red-600 text-sm">{error}</p>
             {error.includes("confirmation") && (
-              <p className="text-red-500 text-xs mt-1">
-                Can&apos;t find the email? Check your spam folder or{" "}
-                <Link href="/auth/sign-up" className="underline">
-                  sign up again
-                </Link>
-              </p>
+              <div className="text-red-500 text-xs mt-2 space-y-1">
+                <p>Can&apos;t find the email? Try these steps:</p>
+                <ul className="list-disc list-inside ml-2 space-y-1">
+                  <li>Check your spam/junk folder</li>
+                  <li>Wait a few minutes - emails can take time to arrive</li>
+                  <li>Make sure you used the correct email address</li>
+                  <li>
+                    <Link href="/auth/sign-up" className="underline">
+                      Sign up again with a different email
+                    </Link>
+                  </li>
+                </ul>
+              </div>
             )}
           </div>
         )}
