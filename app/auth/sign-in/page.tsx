@@ -45,6 +45,7 @@ export default function SignIn() {
           required
           placeholder="Email"
           className="border px-3 py-2 rounded w-full text-black"
+          autoComplete="email"
         />
         <input
           type="password"
@@ -53,6 +54,7 @@ export default function SignIn() {
           required
           placeholder="Password"
           className="border px-3 py-2 rounded w-full text-black"
+          autoComplete="current-password"
         />
         {error && (
           <div className="bg-red-50 border border-red-200 rounded p-3">

@@ -115,6 +115,7 @@ export default function SignUp() {
           required
           placeholder="Email"
           className="border px-3 py-2 rounded w-full text-black"
+          autoComplete="email"
         />
         <input
           type="password"
@@ -123,6 +124,7 @@ export default function SignUp() {
           required
           placeholder="Password"
           className="border px-3 py-2 rounded w-full text-black"
+          autoComplete="new-password"
         />
         <div className="flex gap-4 items-center">
           <label className="flex items-center gap-1">
