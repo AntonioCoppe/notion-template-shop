@@ -21,6 +21,12 @@ export default function CartPage() {
 
   const total = cart.reduce((sum, item) => sum + item.price, 0);
 
+  const handleRemove = (id: string) => {
+    const updatedCart = cart.filter(item => item.id !== id);
+    setCart(updatedCart);
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+  };
+
   const handleCheckout = () => {
     // For now, just alert. Later, implement checkout logic.
     alert("Proceeding to checkout (to be implemented)");
@@ -44,6 +50,13 @@ export default function CartPage() {
                   <div className="font-medium">{item.title}</div>
                   <div className="text-gray-500 text-sm">${item.price}</div>
                 </div>
+                <button
+                  onClick={() => handleRemove(item.id)}
+                  className="ml-2 text-red-600 hover:underline text-xs px-2 py-1 border border-red-200 rounded"
+                  aria-label={`Remove ${item.title} from cart`}
+                >
+                  Remove
+                </button>
               </li>
             ))}
           </ul>
