@@ -30,6 +30,8 @@ export default function VendorDashboard() {
     price: "",
     notion_url: ""
   });
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
+  const [editTemplate, setEditTemplate] = useState({ title: "", price: "", notion_url: "" });
 
   // Redirect if not authenticated or not a vendor
   useEffect(() => {
@@ -127,6 +129,22 @@ export default function VendorDashboard() {
     e.preventDefault();
     if (!vendor) return;
 
+    // Extract OG image from Notion URL
+    let imageUrl = "";
+    try {
+      const res = await fetch("/api/extract-og-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: newTemplate.notion_url }),
+      });
+      const data = await res.json();
+      if (res.ok && data.image) {
+        imageUrl = data.image;
+      }
+    } catch {
+      // Fallback: leave imageUrl empty
+    }
+
     const supabase = getBrowserSupabase();
     const { error } = await supabase
       .from("templates")
@@ -134,7 +152,8 @@ export default function VendorDashboard() {
         vendor_id: vendor.id,
         title: newTemplate.title,
         price: parseFloat(newTemplate.price),
-        notion_url: newTemplate.notion_url
+        notion_url: newTemplate.notion_url,
+        img: imageUrl,
       });
 
     if (error) {
@@ -152,6 +171,52 @@ export default function VendorDashboard() {
     const supabase = getBrowserSupabase();
     await supabase.auth.signOut();
     router.push("/");
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this template?")) return;
+    const supabase = getBrowserSupabase();
+    const { error } = await supabase.from("templates").delete().eq("id", id);
+    if (error) {
+      alert("Failed to delete template. Please try again.");
+      return;
+    }
+    fetchTemplates();
+  };
+
+  const startEdit = (template: Template) => {
+    setEditingTemplateId(template.id);
+    setEditTemplate({
+      title: template.title,
+      price: template.price.toString(),
+      notion_url: template.notion_url,
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingTemplateId(null);
+    setEditTemplate({ title: "", price: "", notion_url: "" });
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTemplateId) return;
+    const supabase = getBrowserSupabase();
+    const { error } = await supabase
+      .from("templates")
+      .update({
+        title: editTemplate.title,
+        price: parseFloat(editTemplate.price),
+        notion_url: editTemplate.notion_url,
+      })
+      .eq("id", editingTemplateId);
+    if (error) {
+      alert("Failed to update template. Please try again.");
+      return;
+    }
+    setEditingTemplateId(null);
+    setEditTemplate({ title: "", price: "", notion_url: "" });
+    fetchTemplates();
   };
 
   if (loading) {
@@ -265,23 +330,69 @@ export default function VendorDashboard() {
           <div className="grid gap-4">
             {templates.map((template) => (
               <div key={template.id} className="border p-4 rounded-lg">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold text-lg">{template.title}</h3>
-                    <p className="text-gray-600">${template.price}</p>
-                    <a
-                      href={template.notion_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 underline text-sm"
-                    >
-                      View Template
-                    </a>
+                {editingTemplateId === template.id ? (
+                  <form onSubmit={handleEditSubmit} className="space-y-2">
+                    <input
+                      type="text"
+                      value={editTemplate.title}
+                      onChange={e => setEditTemplate({ ...editTemplate, title: e.target.value })}
+                      required
+                      className="border px-3 py-2 rounded text-black w-full"
+                      placeholder="Template Title"
+                    />
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editTemplate.price}
+                      onChange={e => setEditTemplate({ ...editTemplate, price: e.target.value })}
+                      required
+                      className="border px-3 py-2 rounded text-black w-full"
+                      placeholder="Price ($)"
+                    />
+                    <input
+                      type="url"
+                      value={editTemplate.notion_url}
+                      onChange={e => setEditTemplate({ ...editTemplate, notion_url: e.target.value })}
+                      required
+                      className="border px-3 py-2 rounded text-black w-full"
+                      placeholder="Notion Share URL"
+                    />
+                    <div className="flex gap-2 mt-2">
+                      <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Save</button>
+                      <button type="button" onClick={cancelEdit} className="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold text-lg">{template.title}</h3>
+                      <p className="text-gray-600">${template.price}</p>
+                      <a
+                        href={template.notion_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline text-sm"
+                      >
+                        View Template
+                      </a>
+                    </div>
+                    <div className="flex flex-col gap-2 items-end">
+                      <span className="text-sm text-gray-500">{new Date(template.created_at).toLocaleDateString()}</span>
+                      <button
+                        onClick={() => startEdit(template)}
+                        className="bg-yellow-400 text-black px-3 py-1 rounded hover:bg-yellow-500 text-xs mt-2"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(template.id)}
+                        className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-xs"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
-                  <span className="text-sm text-gray-500">
-                    {new Date(template.created_at).toLocaleDateString()}
-                  </span>
-                </div>
+                )}
               </div>
             ))}
           </div>

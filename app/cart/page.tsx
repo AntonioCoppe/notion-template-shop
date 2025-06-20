@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 interface CartItem {
   id: string;
@@ -38,7 +39,7 @@ export default function CartPage() {
           <ul className="mb-6 divide-y">
             {cart.map((item) => (
               <li key={item.id} className="flex items-center gap-4 py-4">
-                <img src={item.img} alt={item.title} className="w-16 h-16 rounded object-cover" />
+                <Image src={item.img} alt={item.title} width={64} height={64} className="w-16 h-16 rounded object-cover" />
                 <div className="flex-1">
                   <div className="font-medium">{item.title}</div>
                   <div className="text-gray-500 text-sm">${item.price}</div>

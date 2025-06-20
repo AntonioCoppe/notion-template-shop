@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import TemplateDetailsClient from "./TemplateDetailsClient";
 
-export default async function TemplateDetails({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default async function TemplateDetails({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/templates?id=${id}`, { cache: 'no-store' });
   if (!res.ok) return notFound();
   const data = await res.json();

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 interface Template {
   id: string;
@@ -26,7 +27,7 @@ export default function TemplateDetailsClient({ template }: { template: Template
 
   return (
     <main className="max-w-xl mx-auto px-4 py-10">
-      <img src={template.img} alt={template.title} className="rounded-lg w-full mb-6" style={{ maxHeight: 320, objectFit: 'cover' }} />
+      <Image src={template.img} alt={template.title} width={800} height={320} className="rounded-lg w-full mb-6" style={{ maxHeight: 320, objectFit: 'cover' }} />
       <h1 className="text-3xl font-bold mb-2">{template.title}</h1>
       <p className="text-gray-600 mb-6">{template.description}</p>
       <div className="flex items-center gap-4 mb-8">
