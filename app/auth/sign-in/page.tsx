@@ -77,7 +77,7 @@ export default function SignIn() {
         <button
           type="submit"
           disabled={loading}
-          className={`bg-black text-white px-4 py-2 rounded w-full ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+          className={`btn-primary ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
         >
           {loading ? "Signing in…" : "Sign in"}
         </button>

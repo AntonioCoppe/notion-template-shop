@@ -70,7 +70,7 @@ export default function SignUp() {
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Check your email</h1>
           <p className="text-gray-600 mb-6">
-            We’ve sent a confirmation link to <strong>{email}</strong>
+            We&apos;ve sent a confirmation link to <strong>{email}</strong>
           </p>
           <p className="text-sm text-gray-500 mb-6">
             Click the link in your email to confirm your account and start using the platform.
@@ -152,9 +152,7 @@ export default function SignUp() {
         <button
           type="submit"
           disabled={loading}
-          className={`bg-black text-white px-4 py-2 rounded w-full ${
-            loading ? "opacity-50 cursor-not-allowed" : ""
-          }`}
+          className={`btn-primary ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
         >
           {loading ? "Signing up…" : "Sign up"}
         </button>

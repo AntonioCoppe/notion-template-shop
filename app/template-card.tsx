@@ -47,7 +47,7 @@ export default function TemplateCard({
   return (
     <div
       data-template-id={id}
-      className="border rounded-xl p-4 flex flex-col gap-4 shadow"
+      className="border rounded-xl p-4 flex flex-col gap-4 shadow card"
     >
       <Image
         src={img}
@@ -66,7 +66,7 @@ export default function TemplateCard({
         disabled={loading}
         className={`mt-2 rounded bg-black text-white py-2 hover:opacity-90 ${
           loading ? "opacity-50 cursor-not-allowed" : ""
-        }`}
+        } btn-primary`}
       >
         {loading ? "Redirecting…" : `Buy for $${price}`}
       </button>

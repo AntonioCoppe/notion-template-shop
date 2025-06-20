@@ -112,7 +112,7 @@ export default function Home() {
             <div className="mt-4">
               <Link
                 href="/vendor"
-                className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                className="btn-primary"
               >
                 Go to Vendor Dashboard
               </Link>

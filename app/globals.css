@@ -1,8 +1,21 @@
 @import "tailwindcss";
 
+/* Notion Templates Shop Color Palette */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --primary-purple: #525f7f;
+  --accent-blue: #0074d4;
+  --dark-gray: #333333;
+  --light-gray: #f7f7f7;
+  --white: #ffffff;
+
+  --background: var(--white);
+  --foreground: var(--dark-gray);
+  --header: var(--primary-purple);
+  --button-bg: var(--primary-purple);
+  --button-text: var(--white);
+  --link: var(--accent-blue);
+  --card-bg: var(--light-gray);
+  --divider: var(--light-gray);
 }
 
 :root {
@@ -23,4 +36,38 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--header);
+}
+
+a {
+  color: var(--link);
+  text-decoration: underline;
+}
+
+button, .btn-primary {
+  background: var(--button-bg);
+  color: var(--button-text);
+  border: none;
+  border-radius: 4px;
+  padding: 0.5em 1.2em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+button:hover, .btn-primary:hover {
+  background: var(--accent-blue);
+}
+
+.card, .card-bg {
+  background: var(--card-bg);
+  border-radius: 8px;
+  padding: 1.5em;
+  box-shadow: 0 2px 8px rgba(82, 95, 127, 0.05);
+}
+
+hr, .divider {
+  border-color: var(--divider);
 }

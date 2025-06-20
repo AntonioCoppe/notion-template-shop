@@ -80,6 +80,15 @@ export async function POST(req: NextRequest) {
 
     console.log(`Creating Stripe Connect account for vendor ${vendorId} with email ${userEmail}`);
 
+    // Guard localhost and only send business_profile.url if it's a real HTTPS URL
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL!;
+    const businessProfile: Stripe.AccountCreateParams.BusinessProfile = {
+      mcc: "5734",
+    };
+    if (siteUrl.startsWith("https://")) {
+      businessProfile.url = siteUrl;
+    }
+
     // Create a Stripe Connect account
     const account = await stripe.accounts.create({
       type: "express",
@@ -90,10 +99,7 @@ export async function POST(req: NextRequest) {
         transfers: { requested: true },
       },
       business_type: "individual", // or "company" based on your needs
-      business_profile: {
-        url: process.env.NEXT_PUBLIC_SITE_URL,
-        mcc: "5734", // Computer Software Stores
-      },
+      business_profile: businessProfile,
     });
 
     console.log(`Created Stripe account ${account.id} for vendor ${vendorId}`);
