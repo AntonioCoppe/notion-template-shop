@@ -39,11 +39,16 @@ export async function POST(req: NextRequest) {
     }
 
     // 2) Generate our own signup link
+    const redirectTo = process.env.NEXT_PUBLIC_SITE_URL;
     const { data: tokenData, error: tokenError } =
       await supabase.auth.admin.generateLink({
         type: "signup",
         email,
         password,
+        options: {
+          // Redirect to the account page after email confirmation
+          redirectTo: `${redirectTo}/account`,
+        },
       });
 
     if (tokenError || !tokenData.properties?.action_link) {
@@ -68,7 +73,7 @@ export async function POST(req: NextRequest) {
               Confirm Email Address
             </a>
           </p>
-          <p>If that doesn’t work, copy & paste this link into your browser:</p>
+          <p>If that doesn't work, copy & paste this link into your browser:</p>
           <p style="word-break:break-all; color:#666;">${tokenData.properties.action_link}</p>
           <p>This link expires in 24 hours.</p>
           <p>— The Notion Template Shop Team</p>
