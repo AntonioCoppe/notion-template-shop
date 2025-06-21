@@ -39,32 +39,40 @@ export default function CartPage() {
       router.push("/auth/sign-in");
       return;
     }
-
     if (cart.length === 0) return;
 
     setIsCheckingOut(true);
-
     try {
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: user.email,
-          cartDetails: cart.map(item => ({ id: item.id })),
+          cartDetails: cart.map((item) => ({ id: item.id })),
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to create checkout session');
+      // pull raw text so we can inspect errors or url
+      const text = await response.text();
+      let payload: { url?: string; error?: string };
+      try {
+        payload = JSON.parse(text);
+      } catch {
+        throw new Error("Invalid JSON from server: " + text);
       }
 
-      const { url } = await response.json();
-      if (url) {
-        router.push(url);
+      if (!response.ok) {
+        // show the exact error your endpoint returned
+        throw new Error(payload.error || "Unknown checkout error");
       }
-    } catch (error) {
-      console.error('Checkout error:', error);
-      alert('There was an error during checkout. Please try again.');
+
+      // on success, redirect to Stripe Checkout
+      if (payload.url) {
+        window.location.assign(payload.url);
+      }
+    } catch (err) {
+      console.error("Checkout error:", err);
+      alert((err as Error).message);
     } finally {
       setIsCheckingOut(false);
     }
@@ -73,6 +81,7 @@ export default function CartPage() {
   return (
     <main className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Your Cart</h1>
+
       {cart.length === 0 ? (
         <div className="text-center py-20">
           <p className="text-xl mb-4">Your cart is empty.</p>
@@ -121,11 +130,11 @@ export default function CartPage() {
               disabled={isCheckingOut || cart.length === 0}
               className="w-full rounded bg-black text-white py-3 text-lg hover:opacity-90 disabled:opacity-50"
             >
-              {isCheckingOut ? 'Processing...' : 'Checkout'}
+              {isCheckingOut ? "Processing..." : "Checkout"}
             </button>
           </div>
         </div>
       )}
     </main>
   );
-} 
+}
