@@ -8,7 +8,7 @@ import {
 } from "@/lib/stripeConnect";
 
 // Custom error for missing transfer capability
-export class InsufficientCapabilitiesError extends Error {
+class InsufficientCapabilitiesError extends Error {
   constructor(accountId: string) {
     super(`Stripe account ${accountId} is not ready to receive transfers`);
     this.name = "InsufficientCapabilitiesError";
@@ -111,8 +111,8 @@ export async function POST(req: NextRequest) {
           if (list.data.length) {
             priceId = list.data[0].id;
           }
-        } catch (err: any) {
-          if (err.code !== "resource_missing") throw err;
+        } catch (err: unknown) {
+          if (err && typeof err === 'object' && 'code' in err && err.code !== "resource_missing") throw err;
         }
 
         // create product+price if needed
