@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSupabaseUser } from "@/lib/useSupabaseUser";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
+import Stripe from "stripe";
 
 interface Template {
   id: string;
@@ -24,6 +25,7 @@ export default function VendorDashboard() {
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [connectingStripe, setConnectingStripe] = useState(false);
+  const [acctStatus, setAcctStatus] = useState<Stripe.Account | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newTemplate, setNewTemplate] = useState({
     title: "",
@@ -104,6 +106,16 @@ export default function VendorDashboard() {
       fetchTemplates();
     }
   }, [vendor, fetchTemplates]);
+
+  // After you've fetched `vendor` (and it has an account ID), load its Stripe status:
+  useEffect(() => {
+    if (vendor?.stripe_account_id) {
+      fetch(`/api/stripe/account-status?acct=${vendor.stripe_account_id}`)
+        .then((res) => res.json())
+        .then((acct: Stripe.Account) => setAcctStatus(acct))
+        .catch((err) => console.error("Failed loading account status", err));
+    }
+  }, [vendor]);
 
   const connectStripe = async () => {
     setConnectingStripe(true);
@@ -266,12 +278,31 @@ export default function VendorDashboard() {
       <div className="bg-gray-50 p-6 rounded-lg mb-8">
         <h2 className="text-xl font-semibold mb-4">Stripe Integration</h2>
         {vendor?.stripe_account_id ? (
-          <div className="flex items-center gap-2">
-            <span className="text-green-600">✓ Connected to Stripe</span>
-            <span className="text-sm text-gray-500">
-              Account ID: {vendor.stripe_account_id}
-            </span>
-          </div>
+          acctStatus?.capabilities?.transfers === "active" ? (
+            <div className="flex items-center gap-2">
+              <span className="text-green-600">✓ Connected to Stripe</span>
+              <span className="text-sm text-gray-500">
+                Account ID: {vendor.stripe_account_id}
+              </span>
+            </div>
+          ) : (
+            <div>
+              <p className="text-red-600 mb-2">
+                ⚠️ Your Stripe account isn&apos;t fully onboarded.
+              </p>
+              <button
+                onClick={connectStripe}
+                disabled={connectingStripe}
+                className={`bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700 ${
+                  connectingStripe ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                {connectingStripe
+                  ? "Opening Stripe…"
+                  : "Finish Stripe Onboarding"}
+              </button>
+            </div>
+          )
         ) : (
           <div>
             <p className="text-gray-600 mb-4">
