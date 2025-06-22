@@ -129,6 +129,14 @@ export default function VendorDashboard() {
     }
   }, [vendor]);
 
+  // Force session refresh if role is missing (fixes post-confirmation stale session)
+  useEffect(() => {
+    if (user && !user.user_metadata?.role) {
+      const supabase = getBrowserSupabase();
+      supabase.auth.refreshSession().then(() => window.location.reload());
+    }
+  }, [user]);
+
   // Show loading state
   if (loading) {
     return (
