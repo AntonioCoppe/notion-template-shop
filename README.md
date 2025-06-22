@@ -64,7 +64,7 @@ The application uses the following database structure:
 
 ```mermaid
 erDiagram
-    auth.users {
+    auth_users {
         uuid id PK
         string email
         jsonb user_metadata
@@ -104,8 +104,8 @@ erDiagram
         timestamp created_at
     }
 
-    auth.users ||--o{ vendors : "user_id"
-    auth.users ||--o{ buyers : "user_id"
+    auth_users ||--o{ vendors : "user_id"
+    auth_users ||--o{ buyers : "user_id"
     vendors ||--o{ templates : "vendor_id"
     templates ||--o{ orders : "template_id"
     buyers ||--o{ orders : "buyer_id"
@@ -113,7 +113,7 @@ erDiagram
 
 #### Tables and Columns
 
-- **auth.users**: `id`, `email`, `user_metadata.role`, `created_at`
+- **auth_users**: `id`, `email`, `user_metadata.role`, `created_at`
 - **vendors**: `id`, `user_id`, `stripe_account_id`, `country`, `created_at`
 - **templates**: `id`, `vendor_id`, `title`, `price`, `notion_url`, `img`, `created_at`
 - **buyers**: `id`, `user_id`, `created_at`
