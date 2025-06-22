@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSupabaseUser } from "@/lib/useSupabaseUser";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
+import { vendorApiCall } from "@/lib/api-client";
 import Stripe from "stripe";
 
 interface Template {
@@ -35,15 +36,11 @@ export default function VendorDashboard() {
   });
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
   const [editTemplate, setEditTemplate] = useState({ title: "", price: "", notion_url: "" });
-
-  // Redirect if not authenticated or not a vendor
-  useEffect(() => {
-    if (!loading && (!user || user.user_metadata?.role !== "vendor")) {
-      router.push("/auth/sign-in");
-    }
-  }, [user, loading, router]);
+  const [accessDenied, setAccessDenied] = useState(false);
 
   const fetchVendorData = useCallback(async () => {
+    if (!user) return;
+    
     const supabase = getBrowserSupabase();
     const { data, error } = await supabase
       .from("vendors")
@@ -73,7 +70,7 @@ export default function VendorDashboard() {
 
       setVendor(newVendor);
     }
-  }, [user?.id]);
+  }, [user]);
 
   const fetchTemplates = useCallback(async () => {
     if (!vendor) return;
@@ -93,9 +90,24 @@ export default function VendorDashboard() {
     setTemplates(data || []);
   }, [vendor]);
 
+  // Enhanced access control with loading state
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        router.push("/auth/sign-in?redirect=/vendor");
+        return;
+      }
+      
+      if (user.user_metadata?.role !== "vendor") {
+        setAccessDenied(true);
+        return;
+      }
+    }
+  }, [user, loading, router]);
+
   // Fetch vendor data
   useEffect(() => {
-    if (user) {
+    if (user && user.user_metadata?.role === "vendor") {
       fetchVendorData();
     }
   }, [user, fetchVendorData]);
@@ -117,22 +129,60 @@ export default function VendorDashboard() {
     }
   }, [vendor]);
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show access denied message
+  if (accessDenied) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+          <p className="text-gray-600 mb-6">
+            This page is only accessible to vendors. If you believe this is an error, please contact support.
+          </p>
+          <button
+            onClick={() => router.push("/")}
+            className="bg-black text-white px-6 py-2 rounded hover:opacity-90"
+          >
+            Go to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render the main content until we have a user and they're a vendor
+  if (!user || user.user_metadata?.role !== "vendor") {
+    return null;
+  }
+
   const connectStripe = async () => {
     setConnectingStripe(true);
     try {
-      const response = await fetch("/api/stripe/connect", {
+      const response = await vendorApiCall("/api/stripe/connect", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ vendorId: vendor?.id }),
       });
 
-      if (!response.ok) throw new Error("Failed to create Stripe account");
-      
       const { url } = await response.json();
       window.location.href = url;
     } catch (error) {
       console.error("Error connecting Stripe:", error);
-      alert("Failed to connect Stripe. Please try again.");
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("Failed to connect Stripe. Please try again.");
+      }
     } finally {
       setConnectingStripe(false);
     }
@@ -246,18 +296,6 @@ export default function VendorDashboard() {
     setEditTemplate({ title: "", price: "", notion_url: "" });
     fetchTemplates();
   };
-
-  if (loading) {
-    return (
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="text-center">Loading...</div>
-      </main>
-    );
-  }
-
-  if (!user || user.user_metadata?.role !== "vendor") {
-    return null;
-  }
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-8">

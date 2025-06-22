@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getSupabase } from "@/lib/supabase";
+import { authenticateUser, requireBuyer } from "@/lib/auth-utils";
 import {
   getStripeAccountForVendor,
   VendorNotConnectedError,
@@ -16,24 +17,36 @@ class InsufficientCapabilitiesError extends Error {
 }
 
 export async function POST(req: NextRequest) {
-  // 1) Env check
-  if (!process.env.STRIPE_SECRET_KEY) {
-    return NextResponse.json(
-      { error: "Server configuration error" },
-      { status: 500 }
-    );
-  }
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: "2025-05-28.basil",
-  });
-  const supabase = getSupabase();
-
   try {
+    // Authenticate and verify buyer role
+    const user = await authenticateUser(req);
+    const buyer = requireBuyer(user);
+
+    // 1) Env check
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      );
+    }
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2025-05-28.basil",
+    });
+    const supabase = getSupabase();
+
     // 2) Parse + validate body
     const { email, cartDetails } = await req.json();
     if (typeof email !== "string" || !Array.isArray(cartDetails)) {
       return NextResponse.json(
         { error: "Missing email or cartDetails" },
+        { status: 400 }
+      );
+    }
+
+    // Verify the email matches the authenticated user
+    if (email !== buyer.email) {
+      return NextResponse.json(
+        { error: "Email mismatch" },
         { status: 400 }
       );
     }
@@ -91,7 +104,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
           {
             error:
-              "The vendor’s Stripe account isn’t fully activated. Please reconnect to finish onboarding.",
+              "The vendor's Stripe account isn't fully activated. Please reconnect to finish onboarding.",
           },
           { status: 400 }
         );
@@ -150,13 +163,22 @@ export async function POST(req: NextRequest) {
       metadata: {
         template_ids: templateIds.join(","),
         vendor_id: vendorId,
+        buyer_id: buyer.id,
       },
     });
 
     return NextResponse.json({ url: session.url });
-  } catch (err: unknown) {
-    console.error("⚠️ [stripe/checkout] error:", err);
-    const message = err instanceof Error ? err.message : "Internal Server Error";
-    return NextResponse.json({ error: message }, { status: 500 });
+  } catch (error) {
+    console.error("⚠️ [stripe/checkout] error:", error);
+    if (error instanceof Error) {
+      if (error.message === "Authentication required") {
+        return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+      }
+      if (error.message.includes("Access denied")) {
+        return NextResponse.json({ error: "Access denied. Buyer role required." }, { status: 403 });
+      }
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

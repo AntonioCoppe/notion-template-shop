@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSupabaseUser } from "@/lib/useSupabaseUser";
 import { useRouter } from "next/navigation";
+import { buyerApiCall } from "@/lib/api-client";
 
 interface CartItem {
   id: string;
@@ -15,9 +16,10 @@ interface CartItem {
 
 export default function CartPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
-  const { user } = useSupabaseUser();
+  const { user, loading } = useSupabaseUser();
   const router = useRouter();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("cart");
@@ -25,6 +27,21 @@ export default function CartPage() {
       setCart(JSON.parse(stored));
     }
   }, []);
+
+  // Enhanced access control with loading state
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        router.push("/auth/sign-in?redirect=/cart");
+        return;
+      }
+      
+      if (user.user_metadata?.role !== "buyer") {
+        setAccessDenied(true);
+        return;
+      }
+    }
+  }, [user, loading, router]);
 
   const total = cart.reduce((acc, item) => acc + item.price, 0);
 
@@ -43,28 +60,15 @@ export default function CartPage() {
 
     setIsCheckingOut(true);
     try {
-      const response = await fetch("/api/stripe/checkout", {
+      const response = await buyerApiCall("/api/stripe/checkout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: user.email,
           cartDetails: cart.map((item) => ({ id: item.id })),
         }),
       });
 
-      // pull raw text so we can inspect errors or url
-      const text = await response.text();
-      let payload: { url?: string; error?: string };
-      try {
-        payload = JSON.parse(text);
-      } catch {
-        throw new Error("Invalid JSON from server: " + text);
-      }
-
-      if (!response.ok) {
-        // show the exact error your endpoint returned
-        throw new Error(payload.error || "Unknown checkout error");
-      }
+      const payload = await response.json();
 
       // on success, redirect to Stripe Checkout
       if (payload.url) {
@@ -72,11 +76,52 @@ export default function CartPage() {
       }
     } catch (err) {
       console.error("Checkout error:", err);
-      alert((err as Error).message);
+      if (err instanceof Error) {
+        alert(err.message);
+      } else {
+        alert("Checkout failed. Please try again.");
+      }
     } finally {
       setIsCheckingOut(false);
     }
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show access denied message
+  if (accessDenied) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+          <p className="text-gray-600 mb-6">
+            This page is only accessible to buyers. Vendors cannot access the shopping cart.
+          </p>
+          <button
+            onClick={() => router.push("/")}
+            className="bg-black text-white px-6 py-2 rounded hover:opacity-90"
+          >
+            Go to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render the main content until we have a user and they're a buyer
+  if (!user || user.user_metadata?.role !== "buyer") {
+    return null;
+  }
 
   return (
     <main className="container mx-auto px-4 py-8">

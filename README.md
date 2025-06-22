@@ -18,6 +18,79 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## 🧪 Testing
+
+### Automated Tests
+
+Run the access control test suite to verify all security components:
+
+```bash
+node test-access-control.js
+```
+
+This will check:
+- ✅ Middleware file existence and configuration
+- ✅ Authentication utilities (`lib/auth-utils.ts`, `lib/api-client.ts`)
+- ✅ Protected pages (`/vendor`, `/cart`, `/account`)
+- ✅ Protected API routes (`/api/stripe/connect`, `/api/stripe/checkout`)
+- ✅ Role-based navigation in navbar
+- ✅ Documentation completeness
+
+### Manual Testing Checklist
+
+#### 1. Unauthenticated User Tests
+- [ ] Visit `/vendor` → should redirect to `/auth/sign-in`
+- [ ] Visit `/cart` → should redirect to `/auth/sign-in`
+- [ ] Visit `/account` → should redirect to `/auth/sign-in`
+
+#### 2. Buyer Role Tests
+- [ ] Sign up as buyer
+- [ ] Visit `/vendor` → should show "Access Denied"
+- [ ] Visit `/cart` → should work normally
+- [ ] Visit `/account` → should work normally
+- [ ] Navbar should show Cart and Account links
+- [ ] Role badge should display "buyer"
+
+#### 3. Vendor Role Tests
+- [ ] Sign up as vendor
+- [ ] Visit `/cart` → should show "Access Denied"
+- [ ] Visit `/account` → should show "Access Denied"
+- [ ] Visit `/vendor` → should work normally
+- [ ] Navbar should show Vendor Dashboard link
+- [ ] Role badge should display "vendor"
+
+#### 4. API Route Tests
+- [ ] Call `/api/stripe/connect` without auth → should return 401
+- [ ] Call `/api/stripe/connect` as buyer → should return 403
+- [ ] Call `/api/stripe/checkout` without auth → should return 401
+- [ ] Call `/api/stripe/checkout` as vendor → should return 403
+
+#### 5. Middleware Tests
+- [ ] Direct URL access to protected routes should be blocked
+- [ ] Role-based redirects should work correctly
+- [ ] Loading states should display during authentication checks
+
+### Access Control Features
+
+The application implements comprehensive role-based access control (RBAC):
+
+#### Protected Routes
+- **Vendor Routes**: `/vendor/*` - Only accessible to authenticated vendors
+- **Buyer Routes**: `/cart/*`, `/account/*` - Only accessible to authenticated buyers
+
+#### Security Layers
+1. **Middleware Protection**: Route-level access control at the edge
+2. **API Authentication**: Server-side JWT verification and role checking
+3. **Page-Level Guards**: Client-side role verification with user-friendly error messages
+4. **Role Isolation**: Vendors cannot access buyer features and vice versa
+
+#### Authentication Flow
+1. User signs in/up with role assignment
+2. Middleware checks role on protected routes
+3. API routes verify role via auth headers
+4. Pages show appropriate content based on role
+5. Automatic redirects for unauthorized access
+
 ## ✨ Features
 
 ### For Vendors
@@ -45,6 +118,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - **Email Notifications**: Automated email delivery using Resend
 - **Responsive Design**: Modern UI built with Tailwind CSS
 - **TypeScript**: Full type safety throughout the application
+- **Role-Based Access Control**: Comprehensive security with vendor/buyer isolation
 
 ## 🏗️ Architecture
 

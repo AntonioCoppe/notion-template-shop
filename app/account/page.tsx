@@ -2,40 +2,84 @@
 
 import { useEffect, useState } from "react";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
-import type { User } from "@supabase/supabase-js";
+import { useSupabaseUser } from "@/lib/useSupabaseUser";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import OrderHistory from "../OrderHistory";
 
 export default function AccountPage() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, loading } = useSupabaseUser();
+  const router = useRouter();
   const [buyerId, setBuyerId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [accessDenied, setAccessDenied] = useState(false);
 
+  // Enhanced access control with loading state
   useEffect(() => {
-    const fetchUser = async () => {
-      const supabase = getBrowserSupabase();
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user);
-      
-      // If user exists, fetch their buyer ID
-      if (data.user) {
-        const { data: buyerData, error: buyerError } = await supabase
-          .from("buyers")
-          .select("id")
-          .eq("user_id", data.user.id)
-          .single();
-        
-        if (!buyerError && buyerData) {
-          setBuyerId(buyerData.id);
-        }
+    if (!loading) {
+      if (!user) {
+        router.push("/auth/sign-in?redirect=/account");
+        return;
       }
       
-      setLoading(false);
-    };
-    fetchUser();
-  }, []);
+      if (user.user_metadata?.role !== "buyer") {
+        setAccessDenied(true);
+        return;
+      }
+    }
+  }, [user, loading, router]);
 
-  if (loading) return <div className="text-center py-12">Loading...</div>;
+  useEffect(() => {
+    const fetchBuyerId = async () => {
+      if (!user) return;
+      
+      const supabase = getBrowserSupabase();
+      const { data: buyerData, error: buyerError } = await supabase
+        .from("buyers")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+      
+      if (!buyerError && buyerData) {
+        setBuyerId(buyerData.id);
+      }
+    };
+
+    if (user && user.user_metadata?.role === "buyer") {
+      fetchBuyerId();
+    }
+  }, [user]);
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show access denied message
+  if (accessDenied) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+          <p className="text-gray-600 mb-6">
+            This page is only accessible to buyers. Vendors should use the vendor dashboard.
+          </p>
+          <button
+            onClick={() => router.push("/")}
+            className="bg-black text-white px-6 py-2 rounded hover:opacity-90"
+          >
+            Go to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -45,6 +89,11 @@ export default function AccountPage() {
         <Link href="/auth/sign-in" className="text-blue-600 hover:underline">Sign in</Link>
       </main>
     );
+  }
+
+  // Don't render the main content until we have a user and they're a buyer
+  if (user.user_metadata?.role !== "buyer") {
+    return null;
   }
 
   return (
