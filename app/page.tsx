@@ -20,6 +20,9 @@ export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -32,8 +35,14 @@ export default function Home() {
 
   useEffect(() => {
     const fetchTemplates = async () => {
+      setLoading(true);
       try {
-        const response = await fetch("/api/templates");
+        const params = new URLSearchParams();
+        if (search) params.append("search", search);
+        if (minPrice) params.append("minPrice", minPrice);
+        if (maxPrice) params.append("maxPrice", maxPrice);
+        const url = `/api/templates${params.toString() ? `?${params.toString()}` : ""}`;
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error("Failed to fetch templates");
         }
@@ -41,15 +50,13 @@ export default function Home() {
         setTemplates(data);
       } catch (error) {
         console.error("Error fetching templates:", error);
-        // Fallback to empty array if API fails
         setTemplates([]);
       } finally {
         setLoading(false);
       }
     };
-
     fetchTemplates();
-  }, []);
+  }, [search, minPrice, maxPrice]);
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-10">
@@ -59,6 +66,37 @@ export default function Home() {
       <h1 className="text-4xl font-bold mb-8 text-center">
         Notion Template Shop
       </h1>
+      {/* Filter Controls */}
+      <div className="flex flex-col md:flex-row gap-4 mb-8 items-center justify-between">
+        <input
+          type="text"
+          placeholder="Search templates..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="border px-3 py-2 rounded w-full md:w-1/3 text-black"
+        />
+        <div className="flex gap-2 w-full md:w-auto">
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="Min Price"
+            value={minPrice}
+            onChange={e => setMinPrice(e.target.value)}
+            className="border px-3 py-2 rounded text-black w-24"
+          />
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="Max Price"
+            value={maxPrice}
+            onChange={e => setMaxPrice(e.target.value)}
+            className="border px-3 py-2 rounded text-black w-24"
+          />
+        </div>
+      </div>
+      {/* End Filter Controls */}
       {loading ? (
         <div className="text-center py-8">Loading templates...</div>
       ) : templates.length > 0 ? (

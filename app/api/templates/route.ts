@@ -6,6 +6,9 @@ export async function GET(request: Request) {
     const supabase = getSupabase();
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
+    const search = searchParams.get("search");
+    const minPrice = searchParams.get("minPrice");
+    const maxPrice = searchParams.get("maxPrice");
 
     let query = supabase
       .from("templates")
@@ -25,6 +28,15 @@ export async function GET(request: Request) {
 
     if (id) {
       query = query.eq("id", id);
+    }
+    if (search) {
+      query = query.ilike("title", `%${search}%`);
+    }
+    if (minPrice) {
+      query = query.gte("price", parseFloat(minPrice));
+    }
+    if (maxPrice) {
+      query = query.lte("price", parseFloat(maxPrice));
     }
 
     const { data, error } = await query;
