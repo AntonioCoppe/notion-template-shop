@@ -31,6 +31,12 @@ export default function SignIn() {
       return;
     }
     const role = data.user?.user_metadata?.role;
+    // If role is missing, force a session refresh and reload
+    if (!role) {
+      await supabase.auth.refreshSession();
+      window.location.reload();
+      return;
+    }
     router.push(role === "vendor" ? "/vendor" : "/dashboard");
   };
 
