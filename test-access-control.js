@@ -1,4 +1,4 @@
-const fs = require('fs');
+import fs from 'fs';
 
 async function testAccessControl() {
   console.log('🧪 Testing Access Control Implementation\n');
@@ -121,6 +121,97 @@ async function testAccessControl() {
     console.log('❌ Error checking middleware content:', error.message);
   }
 
+  // Test 8: Check forgot password flow
+  console.log('\n8. Checking forgot password flow...');
+  try {
+    // Check if forgot password page exists
+    if (fs.existsSync('./app/auth/forgot-password/page.tsx')) {
+      console.log('✅ app/auth/forgot-password/page.tsx exists');
+    } else {
+      console.log('❌ app/auth/forgot-password/page.tsx missing');
+    }
+
+    // Check if reset password page exists
+    if (fs.existsSync('./app/auth/reset-password/page.tsx')) {
+      console.log('✅ app/auth/reset-password/page.tsx exists');
+    } else {
+      console.log('❌ app/auth/reset-password/page.tsx missing');
+    }
+
+    // Check if sign-in page has forgot password link
+    if (fs.existsSync('./app/auth/sign-in/page.tsx')) {
+      const signInContent = fs.readFileSync('./app/auth/sign-in/page.tsx', 'utf8');
+      if (signInContent.includes('/auth/forgot-password')) {
+        console.log('✅ Sign-in page includes forgot password link');
+      } else {
+        console.log('❌ Sign-in page missing forgot password link');
+      }
+    } else {
+      console.log('❌ app/auth/sign-in/page.tsx missing');
+    }
+
+    // Check forgot password page functionality
+    if (fs.existsSync('./app/auth/forgot-password/page.tsx')) {
+      const forgotPasswordContent = fs.readFileSync('./app/auth/forgot-password/page.tsx', 'utf8');
+      
+      if (forgotPasswordContent.includes('resetPasswordForEmail')) {
+        console.log('✅ Forgot password page uses resetPasswordForEmail');
+      } else {
+        console.log('❌ Forgot password page missing resetPasswordForEmail');
+      }
+      
+      if (forgotPasswordContent.includes('/auth/reset-password')) {
+        console.log('✅ Forgot password page redirects to reset-password');
+      } else {
+        console.log('❌ Forgot password page missing redirect to reset-password');
+      }
+      
+      if (forgotPasswordContent.includes('useState')) {
+        console.log('✅ Forgot password page has proper React hooks');
+      } else {
+        console.log('❌ Forgot password page missing React hooks');
+      }
+    }
+
+    // Check reset password page functionality
+    if (fs.existsSync('./app/auth/reset-password/page.tsx')) {
+      const resetPasswordContent = fs.readFileSync('./app/auth/reset-password/page.tsx', 'utf8');
+      
+      if (resetPasswordContent.includes('updateUser')) {
+        console.log('✅ Reset password page uses updateUser');
+      } else {
+        console.log('❌ Reset password page missing updateUser');
+      }
+      
+      if (resetPasswordContent.includes('getSession')) {
+        console.log('✅ Reset password page validates session');
+      } else {
+        console.log('❌ Reset password page missing session validation');
+      }
+      
+      if (resetPasswordContent.includes('password !== confirmPassword')) {
+        console.log('✅ Reset password page validates password confirmation');
+      } else {
+        console.log('❌ Reset password page missing password confirmation validation');
+      }
+      
+      if (resetPasswordContent.includes('password.length < 6')) {
+        console.log('✅ Reset password page validates password length');
+      } else {
+        console.log('❌ Reset password page missing password length validation');
+      }
+      
+      if (resetPasswordContent.includes('useState') && resetPasswordContent.includes('useEffect')) {
+        console.log('✅ Reset password page has proper React hooks');
+      } else {
+        console.log('❌ Reset password page missing React hooks');
+      }
+    }
+
+  } catch (error) {
+    console.log('❌ Error checking forgot password flow:', error.message);
+  }
+
   console.log('\n📋 Manual Testing Checklist:');
   console.log('================================');
   console.log('1. Unauthenticated User Tests:');
@@ -151,6 +242,16 @@ async function testAccessControl() {
   console.log('5. Middleware Tests:');
   console.log('   - Direct URL access to protected routes should be blocked');
   console.log('   - Role-based redirects should work correctly');
+  console.log('');
+  console.log('6. Forgot Password Flow Tests:');
+  console.log('   - Click "Forgot password?" on sign-in page → should go to /auth/forgot-password');
+  console.log('   - Enter email on forgot password page → should send reset email');
+  console.log('   - Click reset link in email → should go to /auth/reset-password');
+  console.log('   - Enter new password and confirm → should update password');
+  console.log('   - After password reset → should redirect to sign-in page');
+  console.log('   - Try to access reset-password without valid session → should show error');
+  console.log('   - Try to submit mismatched passwords → should show validation error');
+  console.log('   - Try to submit short password → should show length validation error');
   console.log('');
   console.log('🎯 All tests completed! Check the manual testing checklist above.');
 }

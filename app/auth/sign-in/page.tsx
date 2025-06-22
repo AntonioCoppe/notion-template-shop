@@ -56,6 +56,11 @@ export default function SignIn() {
           className="border px-3 py-2 rounded w-full text-black"
           autoComplete="current-password"
         />
+        <div className="text-right">
+          <Link href="/auth/forgot-password" className="text-sm text-blue-600 hover:underline">
+            Forgot password?
+          </Link>
+        </div>
         {error && (
           <div className="bg-red-50 border border-red-200 rounded p-3">
             <p className="text-red-600 text-sm">{error}</p>
