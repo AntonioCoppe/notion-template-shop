@@ -64,16 +64,56 @@ The application uses the following database structure:
 
 ```mermaid
 erDiagram
-  auth.users ||--o{ vendors : ""
-  auth.users ||--o{ buyers : ""
-  vendors ||--o{ templates : ""
-  templates ||--o{ orders : ""
-  buyers ||--o{ orders : ""
+    auth.users {
+        uuid id PK
+        string email
+        jsonb user_metadata
+        timestamp created_at
+    }
+    
+    vendors {
+        uuid id PK
+        uuid user_id FK
+        string stripe_account_id
+        string country
+        timestamp created_at
+    }
+    
+    buyers {
+        uuid id PK
+        uuid user_id FK
+        timestamp created_at
+    }
+    
+    templates {
+        uuid id PK
+        uuid vendor_id FK
+        string title
+        decimal price
+        string notion_url
+        string img
+        timestamp created_at
+    }
+    
+    orders {
+        uuid id PK
+        uuid template_id FK
+        uuid buyer_id FK
+        decimal amount
+        string status
+        timestamp created_at
+    }
+
+    auth.users ||--o{ vendors : "user_id"
+    auth.users ||--o{ buyers : "user_id"
+    vendors ||--o{ templates : "vendor_id"
+    templates ||--o{ orders : "template_id"
+    buyers ||--o{ orders : "buyer_id"
 ```
 
 #### Tables and Columns
 
-- **auth.users**: `id`, `email`, `user_metadata.role`
+- **auth.users**: `id`, `email`, `user_metadata.role`, `created_at`
 - **vendors**: `id`, `user_id`, `stripe_account_id`, `country`, `created_at`
 - **templates**: `id`, `vendor_id`, `title`, `price`, `notion_url`, `img`, `created_at`
 - **buyers**: `id`, `user_id`, `created_at`
@@ -85,6 +125,8 @@ erDiagram
 - **Stripe Integration**: Vendors must complete Stripe Connect onboarding to receive payments
 - **Order Tracking**: Complete order history with payment status tracking
 - **Multi-vendor Support**: Each vendor has independent Stripe accounts
+- **Role-based Access**: Users have roles (`vendor`/`buyer`) stored in `user_metadata`
+- **Country Support**: Vendors specify their country for Stripe Connect onboarding
 
 ## 🔧 Environment Variables
 
