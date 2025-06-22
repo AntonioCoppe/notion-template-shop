@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
 import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
+import OrderHistory from "../OrderHistory";
 
 export default function AccountPage() {
   const [user, setUser] = useState<User | null>(null);
+  const [buyerId, setBuyerId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,6 +16,20 @@ export default function AccountPage() {
       const supabase = getBrowserSupabase();
       const { data } = await supabase.auth.getUser();
       setUser(data.user);
+      
+      // If user exists, fetch their buyer ID
+      if (data.user) {
+        const { data: buyerData, error: buyerError } = await supabase
+          .from("buyers")
+          .select("id")
+          .eq("user_id", data.user.id)
+          .single();
+        
+        if (!buyerError && buyerData) {
+          setBuyerId(buyerData.id);
+        }
+      }
+      
       setLoading(false);
     };
     fetchUser();
@@ -35,8 +51,14 @@ export default function AccountPage() {
     <main className="max-w-xl mx-auto px-4 py-10">
       <h1 className="text-2xl font-bold mb-4">Account</h1>
       <div className="mb-6">Signed in as <span className="font-mono bg-gray-100 px-2 py-1 rounded">{user.email}</span></div>
-      <h2 className="text-lg font-semibold mb-2">Order History</h2>
-      <div className="text-gray-500 mb-8">(Order history coming soon)</div>
+      
+      <h2 className="text-lg font-semibold mb-4">Order History</h2>
+      {buyerId ? (
+        <OrderHistory buyerId={buyerId} />
+      ) : (
+        <div className="text-gray-500 mb-8">No buyer account found.</div>
+      )}
+      
       <button
         onClick={async () => {
           const supabase = getBrowserSupabase();
