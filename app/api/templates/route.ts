@@ -9,6 +9,8 @@ export async function GET(request: Request) {
     const search = searchParams.get("search");
     const minPrice = searchParams.get("minPrice");
     const maxPrice = searchParams.get("maxPrice");
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const perPage = parseInt(searchParams.get("perPage") || "12", 10);
 
     let query = supabase
       .from("templates")
@@ -22,7 +24,7 @@ export async function GET(request: Request) {
         vendors!inner(
           stripe_account_id
         )
-      `)
+      `, { count: "exact" })
       .not('vendors.stripe_account_id', 'is', null) // Only show templates from vendors with Stripe connected
       .order("created_at", { ascending: false });
 
@@ -39,7 +41,11 @@ export async function GET(request: Request) {
       query = query.lte("price", parseFloat(maxPrice));
     }
 
-    const { data, error } = await query;
+    if (!id) {
+      query = query.range((page - 1) * perPage, page * perPage - 1);
+    }
+
+    const { data, error, count } = await query;
 
     if (error) {
       console.error("Error fetching templates:", error);
@@ -59,7 +65,16 @@ export async function GET(request: Request) {
       notionUrl: template.notion_url,
     })) || [];
 
-    return NextResponse.json(id ? (templates[0] || null) : templates);
+    if (id) {
+      return NextResponse.json(templates[0] || null);
+    }
+
+    return NextResponse.json({
+      data: templates,
+      total: count ?? templates.length,
+      page,
+      perPage
+    });
   } catch (error) {
     console.error("Error in templates API:", error);
     return NextResponse.json(
