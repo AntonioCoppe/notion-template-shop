@@ -1,8 +1,8 @@
 # Notion Template Shop
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+A modern marketplace for Notion templates built with Next.js 15, Supabase, and Stripe Connect. Vendors can sell their Notion templates while buyers can browse and purchase them through a seamless checkout experience.
 
-## Getting Started
+## 🚀 Getting Started
 
 First, run the development server:
 
@@ -18,73 +18,155 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ✨ Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### For Vendors
 
-## Features
+- **Protected Vendor Dashboard**: `/vendor` - Only accessible to authenticated vendors
+- **Stripe Connect Integration**: Complete onboarding flow to receive payments directly
+- **Template Management**: Add, edit, and delete templates with image uploads
+- **Real-time Updates**: Templates appear on the main page immediately after creation
+- **Image Upload**: Upload template preview images to Supabase Storage
+- **Stripe Account Status**: Monitor your Stripe account activation status
 
-### Vendor Onboarding & Dashboard
-
-- **Protected Route**: `/vendor` - Only accessible to authenticated vendors
-- **Stripe Connect Integration**: Vendors can connect their Stripe accounts to receive payments
-- **Template Management**: Vendors can add, view, and manage their templates
-- **Real-time Updates**: Templates are fetched from the database and displayed on the main page
-
-### Buyer Experience
+### For Buyers
 
 - **Browse Templates**: View all available templates from connected vendors
-- **Purchase Flow**: Buy templates through Stripe Checkout
+- **Shopping Cart**: Add templates to cart and manage purchases
+- **Stripe Checkout**: Secure payment processing with Stripe
 - **Email Delivery**: Receive template links via email after purchase
-- **Order History**: View past purchases on the account page
+- **Template Details**: View detailed template information and previews
+- **Account Management**: View order history and manage account settings
 
-## Learn More
+### Platform Features
 
-To learn more about Next.js, take a look at the following resources:
+- **10% Commission**: Platform takes 10% fee on all sales
+- **Multi-vendor Support**: Each vendor has their own Stripe Connect account
+- **Email Notifications**: Automated email delivery using Resend
+- **Responsive Design**: Modern UI built with Tailwind CSS
+- **TypeScript**: Full type safety throughout the application
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🏗️ Architecture
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Tech Stack
 
-## Deploy on Vercel
+- **Frontend**: Next.js 15 with App Router, React 19, TypeScript
+- **Styling**: Tailwind CSS v4
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Supabase Auth
+- **Payments**: Stripe Connect for multi-vendor payments
+- **File Storage**: Supabase Storage for template images
+- **Email**: Resend for transactional emails
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Database Schema
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-## Database schema
-
-The tables used by this project can be created in Supabase using the SQL script
-found at `supabase/schema.sql`.
+The application uses the following database structure:
 
 ```mermaid
 erDiagram
-  users ||--o{ vendors : ""
-  users ||--o{ buyers : ""
+  auth.users ||--o{ vendors : ""
+  auth.users ||--o{ buyers : ""
   vendors ||--o{ templates : ""
   templates ||--o{ orders : ""
   buyers ||--o{ orders : ""
 ```
 
-Tables and columns:
+#### Tables and Columns
 
 - **auth.users**: `id`, `email`, `user_metadata.role`
-- **vendors**: `id`, `user_id`, `stripe_account_id`, `created_at`
-- **templates**: `id`, `vendor_id`, `title`, `price`, `notion_url`, `created_at`
+- **vendors**: `id`, `user_id`, `stripe_account_id`, `country`, `created_at`
+- **templates**: `id`, `vendor_id`, `title`, `price`, `notion_url`, `img`, `created_at`
 - **buyers**: `id`, `user_id`, `created_at`
 - **orders**: `id`, `template_id`, `buyer_id`, `amount`, `status`, `created_at`
 
-## Environment Variables
+#### Key Features
+
+- **Image Storage**: Templates include `img` field for preview images stored in Supabase Storage
+- **Stripe Integration**: Vendors must complete Stripe Connect onboarding to receive payments
+- **Order Tracking**: Complete order history with payment status tracking
+- **Multi-vendor Support**: Each vendor has independent Stripe accounts
+
+## 🔧 Environment Variables
 
 Required environment variables:
 
 ```env
+# Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+
+# Stripe Configuration
 STRIPE_SECRET_KEY=your_stripe_secret_key
 STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+
+# Email Configuration
 RESEND_API_KEY=your_resend_api_key
+
+# Application Configuration
 NEXT_PUBLIC_SITE_URL=your_site_url
 ```
+
+## 📁 Project Structure
+
+```markdown
+notiontemplateshop/
+├── app/                    # Next.js App Router
+│   ├── api/               # API routes
+│   │   ├── auth/          # Authentication endpoints
+│   │   ├── checkout/      # Legacy checkout endpoint
+│   │   ├── stripe/        # Stripe integration
+│   │   ├── templates/     # Template management
+│   │   └── webhook/       # Stripe webhooks
+│   ├── auth/              # Authentication pages
+│   ├── cart/              # Shopping cart
+│   ├── dashboard/         # User dashboard
+│   ├── templates/         # Template browsing
+│   ├── vendor/            # Vendor dashboard
+│   └── globals.css        # Global styles
+├── lib/                   # Utility libraries
+├── public/                # Static assets
+└── supabase/              # Database configuration
+```
+
+## 💳 Payment Flow
+
+1. **Vendor Onboarding**: Vendors sign up and connect their Stripe account
+2. **Template Creation**: Vendors add templates with images and pricing
+3. **Customer Purchase**: Customers browse and add templates to cart
+4. **Checkout**: Stripe Checkout processes payment with 10% platform fee
+5. **Order Processing**: Webhook creates order records and sends email
+6. **Fund Transfer**: Money is transferred to vendor's Stripe account
+
+## 🚀 Deployment
+
+### Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme).
+
+### Database Setup
+
+1. Create a Supabase project
+2. Run the schema migration from `supabase/schema.sql`
+3. Set up Supabase Storage bucket `template-images`
+4. Configure environment variables
+
+### Stripe Setup
+
+1. Create a Stripe account
+2. Set up Stripe Connect for multi-vendor payments
+3. Configure webhook endpoints
+4. Set environment variables
+
+## 🔍 Learn More
+
+To learn more about the technologies used:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API
+- [Supabase Documentation](https://supabase.com/docs) - database and authentication
+- [Stripe Connect Documentation](https://stripe.com/docs/connect) - multi-vendor payments
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs) - styling framework
+
+## 📝 License
+
+This project is licensed under the MIT License.
