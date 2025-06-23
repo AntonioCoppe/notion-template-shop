@@ -256,7 +256,7 @@ export default function VendorDashboard() {
   const signOut = async () => {
     const supabase = getBrowserSupabase();
     await supabase.auth.signOut();
-    await fetch("/api/auth/session", { method: "DELETE" });
+    await fetch("/api/auth/session", { method: "DELETE", credentials: "include" });
     router.push("/");
   };
 
