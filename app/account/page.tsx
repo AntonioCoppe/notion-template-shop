@@ -120,6 +120,7 @@ export default function AccountPage() {
         onClick={async () => {
           const supabase = getBrowserSupabase();
           await supabase.auth.signOut();
+          await fetch("/api/auth/session", { method: "DELETE", credentials: "include" });
           window.location.reload();
         }}
         className="rounded bg-black text-white px-6 py-2 hover:opacity-90"

@@ -10,6 +10,7 @@ export default function Navbar() {
   const handleSignOut = async () => {
     const supabase = getBrowserSupabase();
     await supabase.auth.signOut();
+    await fetch("/api/auth/session", { method: "DELETE", credentials: "include" });
     window.location.reload();
   };
 

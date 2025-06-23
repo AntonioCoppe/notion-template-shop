@@ -30,6 +30,18 @@ export default function SignIn() {
       setLoading(false);
       return;
     }
+    if (data.session) {
+      await fetch("/api/auth/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        }),
+        credentials: "include",
+      });
+    }
+
     const role = data.user?.user_metadata?.role;
     // If role is missing, force a session refresh and reload
     if (!role) {
