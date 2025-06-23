@@ -253,13 +253,6 @@ export default function VendorDashboard() {
     fetchTemplates();
   };
 
-  const signOut = async () => {
-    const supabase = getBrowserSupabase();
-    await supabase.auth.signOut();
-    await fetch("/api/auth/session", { method: "DELETE", credentials: "include" });
-    router.push("/");
-  };
-
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this template?")) return;
     const supabase = getBrowserSupabase();
@@ -308,17 +301,8 @@ export default function VendorDashboard() {
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
+      <div className="mb-8">
         <h1 className="text-3xl font-bold">Vendor Dashboard</h1>
-        <div className="flex gap-4 items-center">
-          <span className="text-sm text-gray-600">Welcome, {user.email}</span>
-          <button
-            onClick={signOut}
-            className="text-sm underline text-blue-600 hover:text-blue-800"
-          >
-            Sign out
-          </button>
-        </div>
       </div>
 
       {/* Stripe Connect Section */}
