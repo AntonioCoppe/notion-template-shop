@@ -216,6 +216,7 @@ erDiagram
 This project uses [Tailwind CSS v4](https://tailwindcss.com/docs). You can customize your design system by editing `tailwind.config.js` in the project root. For example, you can extend the default theme, add custom colors, or configure plugins.
 
 **Config file example:**
+
 ```js
 module.exports = {
   content: [
