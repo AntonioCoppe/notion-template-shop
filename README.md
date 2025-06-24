@@ -296,8 +296,13 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 1. Create a Supabase project
 2. Run the schema migration from `supabase/schema.sql`
-3. Set up Supabase Storage bucket `template-images`
-4. Configure environment variables
+3. Load the development seed data:
+
+   ```bash
+   npx supabase db execute supabase/seed.sql
+   ```
+4. Set up Supabase Storage bucket `template-images`
+5. Configure environment variables
 
 ### Stripe Setup
 
