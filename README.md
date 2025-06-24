@@ -211,6 +211,28 @@ erDiagram
 - **Role-based Access**: Users have roles (`vendor`/`buyer`) stored in `user_metadata`
 - **Country Support**: Vendors specify their country for Stripe Connect onboarding
 
+## 🎨 Tailwind CSS Customization
+
+This project uses [Tailwind CSS v4](https://tailwindcss.com/docs). You can customize your design system by editing `tailwind.config.js` in the project root. For example, you can extend the default theme, add custom colors, or configure plugins.
+
+**Config file example:**
+```js
+module.exports = {
+  content: [
+    './app/**/*.{ts,tsx}',
+    './app/globals.css',
+  ],
+  theme: {
+    extend: {
+      // Add your customizations here
+    },
+  },
+  plugins: [],
+};
+```
+
+Refer to the [Tailwind CSS documentation](https://tailwindcss.com/docs/configuration) for more details.
+
 ## 🔧 Environment Variables
 
 Required environment variables:
