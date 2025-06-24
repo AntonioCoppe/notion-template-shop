@@ -35,5 +35,8 @@
     "tailwindcss": "^4",
     "ts-jest": "^29.1.1",
     "typescript": "^5"
+  },
+  "overrides": {
+    "glob": "^9.3.2"
   }
 }
