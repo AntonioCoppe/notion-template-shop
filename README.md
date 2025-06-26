@@ -147,51 +147,55 @@ The application uses the following database structure:
 
 ```mermaid
 erDiagram
+    %% (Optional) control diagram flow: TB = top→bottom, LR = left→right
+    direction TB
+
     auth_users {
-        uuid id PK
-        string email
-        jsonb user_metadata
-        timestamp created_at
-    }
-    
-    vendors {
-        uuid id PK
-        uuid user_id FK
-        string stripe_account_id
-        string country
-        timestamp created_at
-    }
-    
-    buyers {
-        uuid id PK
-        uuid user_id FK
-        timestamp created_at
-    }
-    
-    templates {
-        uuid id PK
-        uuid vendor_id FK
-        string title
-        decimal price
-        string notion_url
-        string img
-        timestamp created_at
-    }
-    
-    orders {
-        uuid id PK
-        uuid template_id FK
-        uuid buyer_id FK
-        decimal amount
-        string status
+        uuid    id            PK
+        string  email
+        jsonb   user_metadata
         timestamp created_at
     }
 
-    auth_users ||--o{ vendors : "user_id"
-    auth_users ||--o{ buyers : "user_id"
-    vendors ||--o{ templates : "vendor_id"
-    templates ||--o{ orders : "template_id"
-    buyers ||--o{ orders : "buyer_id"
+    vendors {
+        uuid    id            PK
+        uuid    user_id       FK
+        string  stripe_account_id
+        string  country
+        timestamp created_at
+    }
+
+    buyers {
+        uuid    id            PK
+        uuid    user_id       FK
+        timestamp created_at
+    }
+
+    templates {
+        uuid    id            PK
+        uuid    vendor_id     FK
+        string  title
+        decimal price
+        string  notion_url
+        string  img
+        timestamp created_at
+    }
+
+    orders {
+        uuid    id            PK
+        uuid    template_id   FK
+        uuid    buyer_id      FK
+        decimal amount
+        string  status
+        timestamp created_at
+    }
+
+    %% relationships (label after the colon, no quotes)
+    auth_users ||--o{ vendors   : user_id
+    auth_users ||--o{ buyers    : user_id
+    vendors    ||--o{ templates : vendor_id
+    templates  ||--o{ orders    : template_id
+    buyers     ||--o{ orders    : buyer_id
 ```
 
 #### Tables and Columns
