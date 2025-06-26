@@ -240,7 +240,7 @@ Required environment variables:
 
 ```env
 # Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
@@ -254,6 +254,12 @@ RESEND_API_KEY=your_resend_api_key
 # Application Configuration
 NEXT_PUBLIC_SITE_URL=your_site_url
 ```
+
+### Security Notes
+
+- **Supabase URL**: The `NEXT_PUBLIC_SUPABASE_URL` should be in the format `https://your-project-ref.supabase.co`
+- **Project Reference Protection**: The application now dynamically extracts the hostname from the environment variable instead of hardcoding it, preventing exposure of your project reference in the codebase
+- **Environment Variables**: Never commit `.env` files to version control. Use `.env.local` for local development and set environment variables in your deployment platform
 
 ## 📁 Project Structure
 
