@@ -18,17 +18,25 @@ export function useSupabaseUser() {
       setUser(session?.user ?? null);
       setLoading(false);
 
-      if (event === "SIGNED_IN" && session) {
+      const sendTokens =
+        session &&
+        ["INITIAL_SESSION", "SIGNED_IN", "TOKEN_REFRESHED", "USER_UPDATED"].includes(
+          event,
+        );
+
+      if (sendTokens) {
         await fetch("/api/auth/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({
-            access_token: session.access_token,
-            refresh_token: session.refresh_token,
+            access_token: session!.access_token,
+            refresh_token: session!.refresh_token,
           }),
         });
-      } else if (event === "SIGNED_OUT") {
+      }
+
+      if (event === "SIGNED_OUT") {
         await fetch("/api/auth/session", {
           method: "DELETE",
           credentials: "include",
