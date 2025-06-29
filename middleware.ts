@@ -1,15 +1,12 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase';
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
-  
+
   // Create Supabase client for middleware
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = getSupabase();
 
   // Get the current user from the request cookies
   const authCookie = req.cookies.get('sb-access-token')?.value;
