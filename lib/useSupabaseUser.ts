@@ -14,9 +14,34 @@ export function useSupabaseUser() {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
+
+      const sendTokens =
+        session &&
+        ["INITIAL_SESSION", "SIGNED_IN", "TOKEN_REFRESHED", "USER_UPDATED"].includes(
+          event,
+        );
+
+      if (sendTokens) {
+        await fetch("/api/auth/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            access_token: session!.access_token,
+            refresh_token: session!.refresh_token,
+          }),
+        });
+      }
+
+      if (event === "SIGNED_OUT") {
+        await fetch("/api/auth/session", {
+          method: "DELETE",
+          credentials: "include",
+        });
+      }
     });
 
     return () => {
