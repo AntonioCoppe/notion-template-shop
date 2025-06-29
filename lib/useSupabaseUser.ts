@@ -53,7 +53,6 @@ export function useSupabaseUser() {
         await handleSession(session);
       });
     }
-
     // Listen for auth changes
     const {
       data: { subscription },
