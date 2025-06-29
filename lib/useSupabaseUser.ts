@@ -11,6 +11,24 @@ export function useSupabaseUser() {
   useEffect(() => {
     const supabase = getBrowserSupabase();
 
+    // Immediately check for an existing session on mount
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+
+      if (session) {
+        await fetch("/api/auth/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            access_token: session.access_token,
+            refresh_token: session.refresh_token,
+          }),
+        });
+      }
+    });
+
     // Listen for auth changes
     const {
       data: { subscription },
