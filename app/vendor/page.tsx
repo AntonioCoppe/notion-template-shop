@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useSupabaseUser } from "@/lib/useSupabaseUser";
-import { getBrowserSupabase } from "@/lib/supabase-browser";
+import { useSupabase } from "@/lib/session-provider";
 import { vendorApiCall } from "@/lib/api-client";
 import Stripe from "stripe";
 
@@ -21,7 +20,7 @@ interface Vendor {
 }
 
 export default function VendorDashboard() {
-  const { user, loading } = useSupabaseUser();
+  const { user, loading, supabase } = useSupabase();
   const router = useRouter();
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -41,41 +40,83 @@ export default function VendorDashboard() {
   const fetchVendorData = useCallback(async () => {
     if (!user) return;
     
-    const supabase = getBrowserSupabase();
-    const { data, error } = await supabase
-      .from("vendors")
-      .select("id, user_id, stripe_account_id")
-      .eq("user_id", user?.id)
-      .single();
-
-    if (error && error.code !== "PGRST116") {
-      console.error("Error fetching vendor:", error);
-      return;
-    }
-
-    if (data) {
-      setVendor(data);
-    } else {
-      // Create vendor record if it doesn't exist
-      const { data: newVendor, error: createError } = await supabase
+    console.log("Fetching vendor data for user:", user?.id);
+    console.log("User object structure:", {
+      id: user?.id,
+      email: user?.email,
+      role: user?.user_metadata?.role,
+      metadata: user?.user_metadata
+    });
+    
+    try {
+      // First, let's test if the vendors table exists and what its structure is
+      console.log("Testing vendors table access...");
+      const { data: testData, error: testError } = await supabase
         .from("vendors")
-        .insert({ user_id: user?.id })
-        .select()
+        .select("*")
+        .limit(1);
+      
+      console.log("Vendors table test result:", { data: testData, error: testError });
+      
+      const { data, error } = await supabase
+        .from("vendors")
+        .select("id, user_id, stripe_account_id")
+        .eq("user_id", user?.id)
         .single();
 
-      if (createError) {
-        console.error("Error creating vendor:", createError);
+      if (error && error.code !== "PGRST116") {
+        console.error("Error fetching vendor:", error);
         return;
       }
 
-      setVendor(newVendor);
+      if (data) {
+        console.log("Found existing vendor:", data);
+        setVendor(data);
+      } else {
+        // Create vendor record if it doesn't exist
+        console.log("Creating vendor record for user:", user?.id);
+        console.log("User object:", user);
+        
+        const { data: newVendor, error: createError } = await supabase
+          .from("vendors")
+          .insert({ 
+            user_id: user?.id,
+            country: 'US' // Add required country field with default value
+          })
+          .select()
+          .single();
+
+        console.log("Vendor creation result:", { data: newVendor, error: createError });
+
+        if (createError) {
+          console.error("Error creating vendor:", createError);
+          console.error("Error type:", typeof createError);
+          console.error("Error constructor:", createError.constructor.name);
+          console.error("Error keys:", Object.keys(createError));
+          console.error("Error stringified:", JSON.stringify(createError, null, 2));
+          console.error("Error message:", createError.message);
+          console.error("Error details:", createError.details);
+          console.error("Error hint:", createError.hint);
+          console.error("Error code:", createError.code);
+          console.error("Full error object:", createError);
+          return;
+        }
+
+        console.log("Successfully created vendor:", newVendor);
+        setVendor(newVendor);
+      }
+    } catch (error) {
+      console.error("Unexpected error in fetchVendorData:", error);
+      console.error("Error type:", typeof error);
+      console.error("Error constructor:", error?.constructor?.name);
+      console.error("Error message:", (error as Error)?.message);
+      console.error("Full error:", error);
     }
-  }, [user]);
+  }, [user, supabase]);
 
   const fetchTemplates = useCallback(async () => {
     if (!vendor) return;
     
-    const supabase = getBrowserSupabase();
     const { data, error } = await supabase
       .from("templates")
       .select("*")
@@ -88,7 +129,7 @@ export default function VendorDashboard() {
     }
 
     setTemplates(data || []);
-  }, [vendor]);
+  }, [vendor, supabase]);
 
   // Enhanced access control with loading state
   useEffect(() => {
@@ -132,10 +173,9 @@ export default function VendorDashboard() {
   // Force session refresh if role is missing (fixes post-confirmation stale session)
   useEffect(() => {
     if (user && !user.user_metadata?.role) {
-      const supabase = getBrowserSupabase();
       supabase.auth.refreshSession().then(() => window.location.reload());
     }
-  }, [user]);
+  }, [user, supabase]);
 
   // Show loading state
   if (loading) {
@@ -153,14 +193,12 @@ export default function VendorDashboard() {
   if (accessDenied) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
-          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-          <p className="text-gray-600 mb-6">
-            This page is only accessible to vendors. If you believe this is an error, please contact support.
-          </p>
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
+          <p className="text-gray-600 mb-4">You don&apos;t have permission to access the vendor dashboard.</p>
           <button
             onClick={() => router.push("/")}
-            className="bg-black text-white px-6 py-2 rounded hover:opacity-90"
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           >
             Go to Home
           </button>
@@ -202,13 +240,9 @@ export default function VendorDashboard() {
 
     let imageUrl = "";
     if (newTemplate.file) {
-      const supabase = getBrowserSupabase();
-      const fileExt = newTemplate.file.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      // Upload the file
       const { error: uploadError } = await supabase.storage
         .from('template-images')
-        .upload(fileName, newTemplate.file, {
+        .upload(newTemplate.file.name, newTemplate.file, {
           cacheControl: '3600',
           upsert: false,
         });
@@ -220,7 +254,7 @@ export default function VendorDashboard() {
       // Get the public URL
       const { data: publicUrlData } = supabase.storage
         .from('template-images')
-        .getPublicUrl(fileName);
+        .getPublicUrl(newTemplate.file.name);
       imageUrl = publicUrlData?.publicUrl || "";
       if (imageUrl && !imageUrl.includes('/object/public/')) {
         imageUrl = imageUrl.replace('/object/', '/object/public/');
@@ -232,7 +266,6 @@ export default function VendorDashboard() {
       }
     }
 
-    const supabase = getBrowserSupabase();
     const { error } = await supabase
       .from("templates")
       .insert({
@@ -255,7 +288,6 @@ export default function VendorDashboard() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this template?")) return;
-    const supabase = getBrowserSupabase();
     const { error } = await supabase.from("templates").delete().eq("id", id);
     if (error) {
       alert("Failed to delete template. Please try again.");
@@ -281,7 +313,6 @@ export default function VendorDashboard() {
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingTemplateId) return;
-    const supabase = getBrowserSupabase();
     const { error } = await supabase
       .from("templates")
       .update({

@@ -1,14 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useSupabaseUser } from "@/lib/useSupabaseUser";
-import { getBrowserSupabase } from "@/lib/supabase-browser";
+import { useSupabase } from "@/lib/session-provider";
 
 export default function Navbar() {
-  const { user, loading } = useSupabaseUser();
+  const { user, loading, supabase } = useSupabase();
 
   const handleSignOut = async () => {
-    const supabase = getBrowserSupabase();
     await supabase.auth.signOut();
     await fetch("/api/auth/session", { method: "DELETE", credentials: "include" });
     window.location.reload();

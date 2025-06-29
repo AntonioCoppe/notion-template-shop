@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getBrowserSupabase } from "@/lib/supabase-browser";
+import { useSupabase } from "@/lib/session-provider";
 
 export default function SignIn() {
   const router = useRouter();
+  const { supabase } = useSupabase();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -16,7 +17,6 @@ export default function SignIn() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const supabase = getBrowserSupabase();
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,

@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { getBrowserSupabase } from "@/lib/supabase-browser";
+import { useSupabase } from "@/lib/session-provider";
 
 export default function SignUp() {
+  const { supabase } = useSupabase();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"buyer" | "vendor">("buyer");
@@ -46,7 +47,6 @@ export default function SignUp() {
     setError(null);
 
     try {
-      const supabase = getBrowserSupabase();
       const { error } = await supabase.auth.resend({
         type: "signup",
         email,

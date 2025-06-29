@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { getBrowserSupabase } from "@/lib/supabase-browser";
+import { useSupabase } from "@/lib/session-provider";
 
 export default function ForgotPassword() {
+  const { supabase } = useSupabase();
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -16,7 +17,6 @@ export default function ForgotPassword() {
     setError(null);
     setSuccess(false);
 
-    const supabase = getBrowserSupabase();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/reset-password`,
     });
