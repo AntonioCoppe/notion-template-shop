@@ -257,6 +257,7 @@ RESEND_API_KEY=your_resend_api_key
 
 # Application Configuration
 NEXT_PUBLIC_SITE_URL=your_site_url
+ROOT_DOMAIN=notiontemplateshop.com
 ```
 
 ### Security Notes
@@ -264,6 +265,7 @@ NEXT_PUBLIC_SITE_URL=your_site_url
 - **Supabase URL**: The `NEXT_PUBLIC_SUPABASE_URL` should be in the format `https://your-project-ref.supabase.co`
 - **Project Reference Protection**: The application now dynamically extracts the hostname from the environment variable instead of hardcoding it, preventing exposure of your project reference in the codebase
 - **Environment Variables**: Never commit `.env` files to version control. Use `.env.local` for local development and set environment variables in your deployment platform
+- **Root Domain**: Set `ROOT_DOMAIN` in `.env` to your production base domain so cookies work across subdomains
 
 ## 📁 Project Structure
 
