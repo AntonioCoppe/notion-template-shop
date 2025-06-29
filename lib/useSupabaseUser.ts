@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getBrowserSupabase } from "./supabase-browser";
-import type { User } from "@supabase/supabase-js";
+import type { User, Session } from "@supabase/supabase-js";
 
 export function useSupabaseUser() {
   const [user, setUser] = useState<User | null>(null);
@@ -11,8 +11,11 @@ export function useSupabaseUser() {
   useEffect(() => {
     const supabase = getBrowserSupabase();
 
-    // Immediately check for an existing session on mount
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    const url = new URL(window.location.href);
+    const urlAccessToken = url.searchParams.get("access_token");
+    const urlRefreshToken = url.searchParams.get("refresh_token");
+
+    const handleSession = async (session: Session | null) => {
       setUser(session?.user ?? null);
       setLoading(false);
 
@@ -27,8 +30,29 @@ export function useSupabaseUser() {
           }),
         });
       }
-    });
+    };
 
+    if (urlAccessToken && urlRefreshToken) {
+      supabase.auth
+        .setSession({ access_token: urlAccessToken, refresh_token: urlRefreshToken })
+        .then(async ({ data: { session } }) => {
+          await handleSession(session);
+        })
+        .finally(() => {
+          url.searchParams.delete("access_token");
+          url.searchParams.delete("refresh_token");
+          url.searchParams.delete("expires_in");
+          url.searchParams.delete("refresh_token_expires_in");
+          url.searchParams.delete("token_type");
+          url.searchParams.delete("type");
+          window.history.replaceState({}, "", url.pathname + url.search);
+        });
+    } else {
+      // Immediately check for an existing session on mount
+      supabase.auth.getSession().then(async ({ data: { session } }) => {
+        await handleSession(session);
+      });
+    }
     // Listen for auth changes
     const {
       data: { subscription },
