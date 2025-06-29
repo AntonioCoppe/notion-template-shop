@@ -37,6 +37,14 @@ This will check:
 - ✅ Role-based navigation in navbar
 - ✅ Documentation completeness
 
+Run the session cookie test to verify authentication cookies:
+
+```bash
+node test-session-cookies.js
+```
+
+This ensures `/api/auth/session` sets `sb-access-token` and `sb-refresh-token` cookies with the proper domain.
+
 ### Manual Testing Checklist
 
 #### 1. Unauthenticated User Tests
