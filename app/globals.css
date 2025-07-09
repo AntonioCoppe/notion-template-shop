@@ -1,21 +1,21 @@
 @import "tailwindcss";
 
-/* Notion Templates Shop Color Palette */
+/* Notion Templates Shop Color Palette - Dark Theme */
 :root {
-  --primary-purple: #525f7f;
-  --accent-blue: #0074d4;
-  --dark-gray: #333333;
-  --light-gray: #f7f7f7;
-  --white: #ffffff;
+  --primary-purple: #8a7fff;
+  --accent-blue: #4f8cff;
+  --dark-gray: #181a20;
+  --light-gray: #23262f;
+  --white: #ededed;
 
-  --background: var(--white);
-  --foreground: var(--dark-gray);
-  --header: var(--primary-purple);
-  --button-bg: var(--primary-purple);
-  --button-text: var(--white);
-  --link: var(--accent-blue);
-  --card-bg: var(--light-gray);
-  --divider: var(--light-gray);
+  --background: #181a20;
+  --foreground: #ededed;
+  --header: #bcbcff;
+  --button-bg: #2d2f4a;
+  --button-text: #ededed;
+  --link: #4f8cff;
+  --card-bg: #23262f;
+  --divider: #23262f;
 }
 
 :root {
@@ -23,13 +23,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
@@ -65,9 +58,23 @@ button:hover, .btn-primary:hover {
   background: var(--card-bg);
   border-radius: 8px;
   padding: 1.5em;
-  box-shadow: 0 2px 8px rgba(82, 95, 127, 0.05);
+  box-shadow: 0 2px 8px rgba(82, 95, 127, 0.10);
 }
 
 hr, .divider {
   border-color: var(--divider);
+}
+
+/* Enhanced input and textarea outlines for visibility */
+input, textarea {
+  border: 2px solid var(--divider);
+  outline: none;
+  background: var(--card-bg);
+  color: var(--foreground);
+  border-radius: 6px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+input:focus, textarea:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 2px var(--accent-blue);
 }

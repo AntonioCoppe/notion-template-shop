@@ -13,7 +13,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="w-full border-b border-gray-100 bg-white mb-6 text-base font-medium">
+    <nav className="w-full border-b mb-6 text-base font-medium" style={{ background: 'var(--background)', borderColor: 'var(--divider)', color: 'var(--foreground)' }}>
       <div className="max-w-5xl mx-auto flex justify-center gap-8 py-3 px-4 items-center">
         <Link href="/" className="hover:underline">Home</Link>
         
@@ -36,16 +36,16 @@ export default function Navbar() {
         
         {!loading && user ? (
           <>
-            <span className="mr-2 text-sm text-gray-700">{user.email}</span>
-            <span className="mr-2 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+            <span className="mr-2 text-sm" style={{ color: 'var(--foreground)' }}>{user.email}</span>
+            <span className="mr-2 text-xs px-2 py-1 rounded" style={{ color: 'var(--foreground)', background: 'var(--divider)' }}>
               {user.user_metadata?.role || 'user'}
             </span>
-            <button onClick={handleSignOut} className="text-sm underline text-blue-600 hover:text-blue-800">Sign out</button>
+            <button onClick={handleSignOut} className="text-sm underline" style={{ color: 'var(--link)' }}>Sign out</button>
           </>
         ) : (
           <>
-            <Link href="/auth/sign-in" className="underline mr-2">Sign in</Link>
-            <Link href="/auth/sign-up" className="underline">Sign up</Link>
+            <Link href="/auth/sign-in" className="underline mr-2" style={{ color: 'var(--link)' }}>Sign in</Link>
+            <Link href="/auth/sign-up" className="underline" style={{ color: 'var(--link)' }}>Sign up</Link>
           </>
         )}
       </div>
