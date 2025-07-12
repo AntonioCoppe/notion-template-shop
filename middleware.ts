@@ -23,6 +23,11 @@ export async function middleware(req: NextRequest) {
 
   const { pathname } = req.nextUrl;
 
+  // Skip middleware for auth pages
+  if (pathname.startsWith('/auth/')) {
+    return res;
+  }
+
   // Vendor-only routes
   const vendorRoutes = ['/vendor'];
   const isVendorRoute = vendorRoutes.some(route => pathname.startsWith(route));

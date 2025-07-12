@@ -16,6 +16,11 @@ export default function SignUp() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
 
+  const handleRoleAndSignIn = (selectedRole: 'buyer' | 'vendor') => {
+    // Pass the role along as a query param
+    signIn('google', { callbackUrl: `/auth/complete-profile?role=${selectedRole}` });
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
@@ -129,9 +134,33 @@ export default function SignUp() {
         </Link>
         <h1 className="text-2xl font-bold mb-4 text-center">Sign up</h1>
         <div className="social-buttons w-full flex flex-col gap-3 mb-6">
+          <div className="flex gap-4 items-center justify-center mb-4">
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="role"
+                value="buyer"
+                checked={role === "buyer"}
+                onChange={() => setRole("buyer")}
+                className="accent-black"
+              />
+              Buyer
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="role"
+                value="vendor"
+                checked={role === "vendor"}
+                onChange={() => setRole("vendor")}
+                className="accent-black"
+              />
+              Vendor
+            </label>
+          </div>
           <button
             type="button"
-            onClick={() => signIn("google", { callbackUrl: "/auth/callback" })}
+            onClick={() => handleRoleAndSignIn(role)}
             className="flex items-center justify-center gap-2 border border-gray-300 rounded px-4 py-2 bg-white hover:bg-gray-50"
           >
             <Image src="/Google__G__logo.svg.png" alt="Google logo" width={20} height={20} />
@@ -162,30 +191,6 @@ export default function SignUp() {
             className="border px-3 py-2 rounded w-full text-black bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black"
             autoComplete="new-password"
           />
-          <div className="flex gap-4 items-center">
-            <label className="flex items-center gap-1">
-              <input
-                type="radio"
-                name="role"
-                value="buyer"
-                checked={role === "buyer"}
-                onChange={() => setRole("buyer")}
-                className="accent-black"
-              />
-              Buyer
-            </label>
-            <label className="flex items-center gap-1">
-              <input
-                type="radio"
-                name="role"
-                value="vendor"
-                checked={role === "vendor"}
-                onChange={() => setRole("vendor")}
-                className="accent-black"
-              />
-              Vendor
-            </label>
-          </div>
           {error && <p className="text-red-600 text-sm">{error}</p>}
           <button
             type="submit"

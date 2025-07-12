@@ -16,8 +16,8 @@ const handler = NextAuth({
     }),
   ],
   pages: {
-    signIn: "/auth/sign-in",
-    // signUp is not supported by NextAuth pages config
+    signIn: "/auth/sign-up",
+    newUser: "/auth/complete-profile",
   },
   callbacks: {
     async signIn({ user, account }) {
@@ -38,32 +38,27 @@ const handler = NextAuth({
             email_confirm: true,
             user_metadata: {},
           });
-          // Mark as first login
-          (user as typeof user & { isFirstLogin: boolean }).isFirstLogin = true;
-        } else if (!existingUser.user_metadata?.role) {
-          // User exists but has no role
-          (user as typeof user & { isFirstLogin: boolean }).isFirstLogin = true;
         }
       }
       return true;
     },
     async redirect({ url, baseUrl }) {
-      // For Google sign-ins, redirect to our callback page to handle role selection
+      // For new users, redirect to complete profile page
       if (url.startsWith(baseUrl)) {
-        return `${baseUrl}/auth/callback`;
+        return `${baseUrl}/auth/complete-profile`;
       }
       return url;
     },
-    async jwt({ token, user }) {
-      if ((user as typeof user & { isFirstLogin?: boolean })?.isFirstLogin) {
-        (token as typeof token & { isFirstLogin: boolean }).isFirstLogin = true;
+    async jwt({ token, user, account }) {
+      // Capture role on first sign-in
+      if (account && user && (user as typeof user & { role?: string }).role) {
+        (token as typeof token & { role?: string }).role = (user as typeof user & { role?: string }).role;
       }
       return token;
     },
     async session({ session, token }) {
-      if ((token as typeof token & { isFirstLogin?: boolean })?.isFirstLogin) {
-        (session as typeof session & { isFirstLogin: boolean }).isFirstLogin = true;
-      }
+      // Add role to session
+      (session as typeof session & { user: typeof session.user & { role?: string } }).user.role = (token as typeof token & { role?: string }).role;
       return session;
     },
   },
