@@ -4,6 +4,7 @@ import "./globals.css";
 import SupabaseProvider from "@/lib/session-provider";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import Link from "next/link";
+import Header from "./Header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,33 +37,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <SupabaseProvider>
-          {/* Header */}
-          <header className="container w-full flex flex-wrap items-center justify-between py-4 px-2 md:px-0">
-            <Link href="#" className="logo flex-shrink-0">
-              <span className="logo-icon">
-                <span className="grid-cell"></span>
-                <span className="grid-cell"></span>
-                <span className="grid-cell"></span>
-                <span className="grid-cell"></span>
-              </span>
-              <span className="logo-text">Notion Template Shop</span>
-            </Link>
-            <button className="md:hidden flex flex-col justify-center items-center w-8 h-8 ml-auto mr-2" aria-label="Toggle menu">
-              <span className="block w-6 h-0.5 bg-current mb-1 transition-transform "></span>
-              <span className="block w-6 h-0.5 bg-current mb-1 transition-opacity opacity-100"></span>
-              <span className="block w-6 h-0.5 bg-current transition-transform "></span>
-            </button>
-            <nav className="hidden md:flex gap-6 items-center flex-wrap ml-4">
-              <Link href="/">Home Page</Link>
-              <Link href="/templates">Templates</Link>
-              <Link href="#">Pricing</Link>
-              <Link href="#">Resources ▼</Link>
-            </nav>
-            <div className="hidden md:flex buttons gap-2 ml-4">
-              <Link className="btn-secondary" href="/auth/sign-up">Join</Link>
-              <Link className="btn-primary" href="/auth/sign-in">Learn</Link>
-            </div>
-          </header>
+          <Header />
           {children}
           {/* Footer */}
           <footer className="w-full px-2 mt-12">

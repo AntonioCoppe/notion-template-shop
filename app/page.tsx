@@ -119,41 +119,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-      {/* Footer */}
-      <footer className="w-full px-2">
-        <div className="container footer-top flex flex-col md:flex-row items-center justify-between gap-4">
-          <a href="#" className="logo">
-            <span className="logo-icon">
-              <span className="grid-cell"></span>
-              <span className="grid-cell"></span>
-              <span className="grid-cell"></span>
-              <span className="grid-cell"></span>
-            </span>
-            <span className="logo-text">Notion Template Shop</span>
-          </a>
-          <nav className="footer-nav flex flex-wrap gap-2 md:gap-6">
-            <Link href="/">Home</Link>
-            <Link href="/templates">Templates</Link>
-            <Link href="#">Pricing</Link>
-            <Link href="#">Resources</Link>
-          </nav>
-          <div className="footer-social flex gap-2">
-            <a href="#" aria-label="Twitter">🐦</a>
-            <a href="#" aria-label="LinkedIn">💼</a>
-            <a href="#" aria-label="Instagram">📸</a>
-          </div>
-        </div>
-        <div className="container footer-bottom flex flex-col md:flex-row items-center justify-between gap-2 mt-4">
-          <div>© 2025 Reulme. All rights reserved.</div>
-          <div className="footer-nav flex flex-wrap gap-2 md:gap-6">
-            <Link href="/support" className="hover:underline">Customer Support</Link>
-            <span className="hidden md:inline">|</span>
-            <Link href="/privacy-policy" className="hover:underline">Privacy Policy</Link>
-            <span className="hidden md:inline">|</span>
-            <Link href="/terms-of-service" className="hover:underline">Terms of Service</Link>
-          </div>
-        </div>
-      </footer>
     </>
   );
 }
