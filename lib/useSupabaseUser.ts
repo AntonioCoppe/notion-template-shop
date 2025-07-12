@@ -20,7 +20,7 @@ export function useSupabaseUser() {
       setLoading(false);
 
       if (session) {
-        await fetch("/api/auth/session", {
+        await fetch("/api/supabase/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -67,7 +67,7 @@ export function useSupabaseUser() {
         );
 
       if (sendTokens) {
-        await fetch("/api/auth/session", {
+        await fetch("/api/supabase/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -79,7 +79,7 @@ export function useSupabaseUser() {
       }
 
       if (event === "SIGNED_OUT") {
-        await fetch("/api/auth/session", {
+        await fetch("/api/supabase/session", {
           method: "DELETE",
           credentials: "include",
         });

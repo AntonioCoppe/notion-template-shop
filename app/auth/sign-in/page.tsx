@@ -39,7 +39,7 @@ export default function SignIn() {
       return;
     }
     if (data.session) {
-      await fetch("/api/auth/session", {
+      await fetch("/api/supabase/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

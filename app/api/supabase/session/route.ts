@@ -47,4 +47,4 @@ export async function DELETE(req: NextRequest) {
   res.cookies.set("sb-access-token", "", options);
   res.cookies.set("sb-refresh-token", "", options);
   return res;
-}
+} 
