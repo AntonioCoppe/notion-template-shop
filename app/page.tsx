@@ -21,64 +21,11 @@ const testimonials = [
 
 export default function Home() {
   const [testimonialIdx, setTestimonialIdx] = useState(0);
-  const [menuOpen, setMenuOpen] = useState(false);
   const nextTestimonial = () => setTestimonialIdx((testimonialIdx + 1) % testimonials.length);
   const prevTestimonial = () => setTestimonialIdx((testimonialIdx - 1 + testimonials.length) % testimonials.length);
 
-  // Responsive nav links
-  const navLinks = (
-    <>
-      <Link href="/">Home Page</Link>
-      <Link href="/templates">Templates</Link>
-      <Link href="#">Pricing</Link>
-      <Link href="#">Resources ▼</Link>
-    </>
-  );
-
   return (
     <>
-      {/* Header */}
-      <header className="container w-full flex flex-wrap items-center justify-between py-4 px-2 md:px-0">
-        <a href="#" className="logo flex-shrink-0">
-          <span className="logo-icon">
-            <span className="grid-cell"></span>
-            <span className="grid-cell"></span>
-            <span className="grid-cell"></span>
-            <span className="grid-cell"></span>
-          </span>
-          <span className="logo-text">Notion Template Shop</span>
-        </a>
-        {/* Hamburger for mobile */}
-        <button
-          className="md:hidden flex flex-col justify-center items-center w-8 h-8 ml-auto mr-2"
-          aria-label="Toggle menu"
-          onClick={() => setMenuOpen((open) => !open)}
-        >
-          <span className={`block w-6 h-0.5 bg-current mb-1 transition-transform ${menuOpen ? 'rotate-45 translate-y-1.5' : ''}`}></span>
-          <span className={`block w-6 h-0.5 bg-current mb-1 transition-opacity ${menuOpen ? 'opacity-0' : 'opacity-100'}`}></span>
-          <span className={`block w-6 h-0.5 bg-current transition-transform ${menuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
-        </button>
-        {/* Desktop nav */}
-        <nav className="hidden md:flex gap-6 items-center flex-wrap ml-4">
-          {navLinks}
-        </nav>
-        <div className="hidden md:flex buttons gap-2 ml-4">
-          <Link href="/auth/sign-up" className="btn-secondary">Join</Link>
-          <Link href="/auth/sign-in" className="btn-primary">Learn</Link>
-        </div>
-      </header>
-      {/* Mobile menu dropdown */}
-      {menuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-200 shadow-lg z-50 w-full">
-          <div className="flex flex-col gap-2 py-2 px-4">
-            {navLinks}
-            <div className="flex gap-2 mt-2">
-              <Link href="/auth/sign-up" className="btn-secondary flex-1 text-center">Join</Link>
-              <Link href="/auth/sign-in" className="btn-primary flex-1 text-center">Learn</Link>
-            </div>
-          </div>
-        </div>
-      )}
       {/* Hero Section */}
       <section className="hero w-full max-w-full overflow-x-hidden">
         <div className="hero__image" style={{ position: 'relative', width: '100%', height: '100%' }}>

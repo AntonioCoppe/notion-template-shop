@@ -20,8 +20,43 @@ const handler = NextAuth({
     // signUp is not supported by NextAuth pages config
   },
   callbacks: {
-    async session({ session }) {
-      // you can add custom session properties here
+    async signIn({ user, account }) {
+      // Only run for Google sign-in
+      if (account?.provider === 'google') {
+        const { getSupabase } = await import('@/lib/supabase');
+        const supabase = getSupabase();
+        // Check if user exists in Supabase
+        const { data: existingUser } = await supabase
+          .from('auth.users')
+          .select('id, user_metadata')
+          .eq('email', user.email)
+          .single();
+        if (!existingUser) {
+          // Create user in Supabase with no role yet
+          await supabase.auth.admin.createUser({
+            email: user.email as string,
+            email_confirm: true,
+            user_metadata: {},
+          });
+          // Mark as first login
+          (user as typeof user & { isFirstLogin: boolean }).isFirstLogin = true;
+        } else if (!existingUser.user_metadata?.role) {
+          // User exists but has no role
+          (user as typeof user & { isFirstLogin: boolean }).isFirstLogin = true;
+        }
+      }
+      return true;
+    },
+    async jwt({ token, user }) {
+      if ((user as typeof user & { isFirstLogin?: boolean })?.isFirstLogin) {
+        (token as typeof token & { isFirstLogin: boolean }).isFirstLogin = true;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if ((token as typeof token & { isFirstLogin?: boolean })?.isFirstLogin) {
+        (session as typeof session & { isFirstLogin: boolean }).isFirstLogin = true;
+      }
       return session;
     },
   },
