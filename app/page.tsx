@@ -1,161 +1,192 @@
 "use client";
 
-import TemplateCard from "./template-card";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { getBrowserSupabase } from "@/lib/supabase-browser";
-import type { User } from "@supabase/supabase-js";
+import Image from "next/image";
+import { useState } from "react";
 
-interface Template {
-  id: string;
-  title: string;
-  price: number;
-  priceId: string;
-  img: string;
-  description: string;
-  notionUrl: string;
-}
+const testimonials = [
+  {
+    text: "This marketplace transformed the way I organize my work. The templates are beautiful and so easy to use!",
+    author: "Jane Doe / Project Manager, ABC Corp",
+  },
+  {
+    text: "A fantastic resource for Notion users. I found exactly what I needed in minutes.",
+    author: "John Smith / Freelancer",
+  },
+  {
+    text: "The best Notion template shop out there. Highly recommended!",
+    author: "Emily Chen / Startup Founder",
+  },
+];
 
 export default function Home() {
-  const [user, setUser] = useState<User | null>(null);
-  const [templates, setTemplates] = useState<Template[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
-  const perPage = 12;
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const supabase = getBrowserSupabase();
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user);
-    };
-    fetchUser();
-  }, []);
-
-  useEffect(() => {
-    const fetchTemplates = async () => {
-      setLoading(true);
-      try {
-        const params = new URLSearchParams();
-        if (search) params.append("search", search);
-        if (minPrice) params.append("minPrice", minPrice);
-        if (maxPrice) params.append("maxPrice", maxPrice);
-        params.append("page", page.toString());
-        params.append("perPage", perPage.toString());
-        const url = `/api/templates?${params.toString()}`;
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error("Failed to fetch templates");
-        }
-        const result = await response.json();
-        setTemplates(result.data);
-        setTotal(result.total);
-      } catch (error) {
-        console.error("Error fetching templates:", error);
-        setTemplates([]);
-        setTotal(0);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTemplates();
-  }, [search, minPrice, maxPrice, page]);
-
-  const totalPages = Math.ceil(total / perPage);
-  const canPrev = page > 1;
-  const canNext = page < totalPages;
+  const [testimonialIdx, setTestimonialIdx] = useState(0);
+  const nextTestimonial = () => setTestimonialIdx((testimonialIdx + 1) % testimonials.length);
+  const prevTestimonial = () => setTestimonialIdx((testimonialIdx - 1 + testimonials.length) % testimonials.length);
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10">
-      <header className="flex justify-end gap-4 mb-8 items-center">
-        {/* Auth buttons moved to Navbar */}
+    <>
+      {/* Header */}
+      <header className="container">
+        <a href="#" className="logo">
+          <span className="logo-icon">
+            <span className="grid-cell"></span>
+            <span className="grid-cell"></span>
+            <span className="grid-cell"></span>
+            <span className="grid-cell"></span>
+          </span>
+          <span className="logo-text">Notion Template Shop</span>
+        </a>
+        <nav>
+          <Link href="/">Home Page</Link>
+          <Link href="/templates">Templates</Link>
+          <Link href="#">Pricing</Link>
+          <Link href="#">Resources ▼</Link>
+        </nav>
+        <div className="buttons">
+          <Link href="/auth/sign-up" className="btn-secondary">Join</Link>
+          <Link href="/auth/sign-in" className="btn-primary">Learn</Link>
+        </div>
       </header>
-      <h1 className="text-4xl font-bold mb-8 text-center">
-        Notion Template Shop
-      </h1>
-      {/* Filter Controls */}
-      <div className="flex flex-col md:flex-row gap-4 mb-8 items-center justify-between">
-        <input
-          type="text"
-          placeholder="Search templates..."
-          value={search}
-          onChange={e => { setSearch(e.target.value); setPage(1); }}
-          className="border px-3 py-2 rounded w-full md:w-1/3 text-black"
-        />
-        <div className="flex gap-2 w-full md:w-auto">
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="Min Price"
-            value={minPrice}
-            onChange={e => { setMinPrice(e.target.value); setPage(1); }}
-            className="border px-3 py-2 rounded text-black w-24"
-          />
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="Max Price"
-            value={maxPrice}
-            onChange={e => { setMaxPrice(e.target.value); setPage(1); }}
-            className="border px-3 py-2 rounded text-black w-24"
+
+      {/* Hero Section */}
+      <section className="hero">
+        <div className="hero__image" style={{ position: 'relative', width: '100%', height: '100%' }}>
+          <Image
+            src="/backgound.png"
+            alt="Notion Templates Hero"
+            fill
+            style={{
+              objectFit: "cover",
+              borderRadius: "var(--border-radius)",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.08)"
+            }}
+            priority
           />
         </div>
-      </div>
-      {/* End Filter Controls */}
-      {loading ? (
-        <div className="text-center py-8">Loading templates...</div>
-      ) : templates.length > 0 ? (
-        <>
-          <div className="grid gap-6 grid-cols-[repeat(auto-fit,minmax(250px,1fr))]">
-            {templates.map((t) => (
-              <TemplateCard key={t.id} {...t} />
-            ))}
+        <h1 className="hero__title">Unlock Your Creativity with Notion Templates</h1>
+        <p className="hero__subtitle">
+          Discover a diverse collection of professionally designed Notion templates to boost your productivity, streamline your workflow, and spark your creativity. Whether for work, study, or personal projects, you’ll find the perfect template to meet your needs.
+        </p>
+        <div className="buttons">
+          <Link href="/templates" className="btn-primary">Explore</Link>
+          <Link href="#" className="btn-secondary">Learn More</Link>
+        </div>
+      </section>
+
+      {/* Marketplace Intro */}
+      <section className="section-intro">
+        <div className="section-intro__small">Explore</div>
+        <div className="section-intro__headline">Discover Our Unique Notion Templates Marketplace</div>
+        <div className="section-intro__text">
+          Our marketplace offers a curated selection of Notion templates crafted by top creators. From project management to personal growth, you’ll find the perfect fit.
+        </div>
+      </section>
+
+      {/* Features Grid */}
+      <section className="container">
+        <div className="features">
+          <div className="feature-card">
+            <div className="feature-card__image" />
+            <div className="feature-card__title">Curated Selection</div>
+            <div className="feature-card__desc">Handpicked templates for every use case, ensuring quality and variety.</div>
           </div>
-          {/* Pagination Controls */}
-          <div className="flex justify-center items-center gap-4 mt-8">
-            <button
-              className="px-3 py-1 rounded border disabled:opacity-50"
-              onClick={() => setPage(page - 1)}
-              disabled={!canPrev}
-            >
-              Previous
-            </button>
-            <span>
-              Page {page} of {totalPages || 1}
+          <div className="feature-card">
+            <div className="feature-card__image" />
+            <div className="feature-card__title">Easy Customization</div>
+            <div className="feature-card__desc">Effortlessly adapt templates to your workflow and style.</div>
+          </div>
+          <div className="feature-card">
+            <div className="feature-card__image" />
+            <div className="feature-card__title">Instant Access</div>
+            <div className="feature-card__desc">Get started right away with instant downloads and clear instructions.</div>
+          </div>
+        </div>
+        <div className="feature-actions">
+          <Link href="/templates">Browse</Link>
+          <Link href="/auth/sign-up">Get Started</Link>
+        </div>
+      </section>
+
+      {/* Testimonial Carousel */}
+      <section className="testimonial">
+        <button className="arrow arrow--left" onClick={prevTestimonial} aria-label="Previous testimonial">&#8592;</button>
+        <div className="testimonial__text">“{testimonials[testimonialIdx].text}”</div>
+        <div className="testimonial__author">{testimonials[testimonialIdx].author}</div>
+        <button className="arrow arrow--right" onClick={nextTestimonial} aria-label="Next testimonial">&#8594;</button>
+        <div className="dots">
+          {testimonials.map((_, i) => (
+            <span key={i} style={{
+              display: 'inline-block',
+              width: 8, height: 8, borderRadius: '50%',
+              background: i === testimonialIdx ? 'var(--color-accent)' : '#ccc',
+              margin: '0 4px',
+            }} />
+          ))}
+        </div>
+      </section>
+
+      {/* Best Selling Section */}
+      <section className="best-selling container">
+        <div className="best-selling__text">
+          <div className="best-selling__heading">Best-Selling Templates</div>
+          <div className="best-selling__para">
+            Explore our most popular Notion templates, loved by thousands of users for their design and functionality.
+          </div>
+          <Link href="/templates" className="btn-primary">See Best Sellers</Link>
+        </div>
+        <div className="best-selling__image" />
+      </section>
+
+      {/* Newsletter / Final CTA */}
+      <section className="newsletter container">
+        <div className="newsletter__heading">Discover Your Perfect Template</div>
+        <div className="newsletter__content">
+          <div className="newsletter__para">
+            Join our community and get updates on the latest Notion templates, tips, and exclusive offers.
+          </div>
+          <div className="buttons">
+            <Link href="/templates" className="btn-primary">Explore</Link>
+            <Link href="#" className="btn-secondary">Subscribe</Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer>
+        <div className="container footer-top">
+          <a href="#" className="logo">
+            <span className="logo-icon">
+              <span className="grid-cell"></span>
+              <span className="grid-cell"></span>
+              <span className="grid-cell"></span>
+              <span className="grid-cell"></span>
             </span>
-            <button
-              className="px-3 py-1 rounded border disabled:opacity-50"
-              onClick={() => setPage(page + 1)}
-              disabled={!canNext}
-            >
-              Next
-            </button>
+            <span className="logo-text">Notion Template Shop</span>
+          </a>
+          <nav className="footer-nav">
+            <Link href="/">Home</Link>
+            <Link href="/templates">Templates</Link>
+            <Link href="#">Pricing</Link>
+            <Link href="#">Resources</Link>
+          </nav>
+          <div className="footer-social">
+            <a href="#" aria-label="Twitter">🐦</a>
+            <a href="#" aria-label="LinkedIn">💼</a>
+            <a href="#" aria-label="Instagram">📸</a>
           </div>
-        </>
-      ) : (
-        <div className="text-center py-8">
-          <p className="text-gray-600 mb-4">No templates available yet.</p>
-          <p className="text-sm text-gray-500">
-            Vendors can add templates by signing up and connecting their Stripe account.
-          </p>
-          {user?.user_metadata?.role === "vendor" && (
-            <div className="mt-4">
-              <Link
-                href="/vendor"
-                className="btn-primary"
-              >
-                Go to Vendor Dashboard
-              </Link>
-            </div>
-          )}
         </div>
-      )}
-    </main>
+        <div className="container footer-bottom">
+          <div>© 2025 Reulme. All rights reserved.</div>
+          <div className="footer-nav">
+            <Link href="/support" className="hover:underline">Customer Support</Link>
+            <span className="hidden md:inline">|</span>
+            <Link href="/privacy-policy" className="hover:underline">Privacy Policy</Link>
+            <span className="hidden md:inline">|</span>
+            <Link href="/terms-of-service" className="hover:underline">Terms of Service</Link>
+          </div>
+        </div>
+      </footer>
+    </>
   );
 }

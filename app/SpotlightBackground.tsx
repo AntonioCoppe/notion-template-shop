@@ -7,7 +7,7 @@ interface SpotlightBackgroundProps {
 }
 
 const SpotlightBackground: React.FC<SpotlightBackgroundProps> = ({
-  spotlightColor = "rgba(0, 229, 255, 0.2)"
+  spotlightColor = "rgba(0,0,0,0.15)"
 }) => {
   const ref = useRef<HTMLDivElement>(null);
 
