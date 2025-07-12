@@ -131,7 +131,7 @@ export default function SignUp() {
         <div className="social-buttons w-full flex flex-col gap-3 mb-6">
           <button
             type="button"
-            onClick={() => signIn("google", { callbackUrl: `${window.location.origin}/dashboard` })}
+            onClick={() => signIn("google", { callbackUrl: "/auth/callback" })}
             className="flex items-center justify-center gap-2 border border-gray-300 rounded px-4 py-2 bg-white hover:bg-gray-50"
           >
             <Image src="/Google__G__logo.svg.png" alt="Google logo" width={20} height={20} />

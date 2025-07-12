@@ -47,6 +47,13 @@ const handler = NextAuth({
       }
       return true;
     },
+    async redirect({ url, baseUrl }) {
+      // For Google sign-ins, redirect to our callback page to handle role selection
+      if (url.startsWith(baseUrl)) {
+        return `${baseUrl}/auth/callback`;
+      }
+      return url;
+    },
     async jwt({ token, user }) {
       if ((user as typeof user & { isFirstLogin?: boolean })?.isFirstLogin) {
         (token as typeof token & { isFirstLogin: boolean }).isFirstLogin = true;
