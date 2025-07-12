@@ -41,10 +41,19 @@ export async function authenticateUser(request: NextRequest): Promise<Authentica
 // Utility function to clear stale tokens
 export async function clearStaleTokens(supabase: SupabaseClient) {
   try {
-    await supabase.auth.signOut();
-    console.log('Stale tokens cleared');
+    // Check if there's an existing session first
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (session) {
+      // Only sign out if there's an existing session
+      await supabase.auth.signOut();
+      console.log('Stale tokens cleared');
+    } else {
+      console.log('No existing session to clear');
+    }
   } catch (error) {
     console.error('Error clearing tokens:', error);
+    // Don't throw the error, just log it
   }
 }
 

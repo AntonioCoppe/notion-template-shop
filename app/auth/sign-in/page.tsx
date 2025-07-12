@@ -17,23 +17,37 @@ export default function SignIn() {
   const [loading, setLoading] = useState(false);
 
   const handleRoleAndSignIn = async (selectedRole: 'buyer' | 'vendor') => {
-    // Clear any stale tokens before starting new OAuth flow
-    await clearStaleTokens(supabase);
-    
-    // Use Supabase's OAuth flow with role in state
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/complete-profile?role=${selectedRole}`,
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'consent',
+    try {
+      console.log('Starting Google OAuth flow for role:', selectedRole);
+      
+      // Clear any stale tokens before starting new OAuth flow
+      try {
+        await clearStaleTokens(supabase);
+      } catch (error) {
+        console.warn('Token clearing failed, continuing with OAuth:', error);
+      }
+      
+      // Use Supabase's OAuth flow with role in state
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/complete-profile?role=${selectedRole}`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
-      },
-    });
-    
-    if (error) {
-      console.error('OAuth error:', error);
+      });
+      
+      if (error) {
+        console.error('OAuth error:', error);
+        setError(`OAuth error: ${error.message}`);
+      } else {
+        console.log('OAuth flow initiated successfully');
+      }
+    } catch (error) {
+      console.error('Unexpected error in OAuth flow:', error);
+      setError('Failed to start OAuth flow. Please try again.');
     }
   };
 
