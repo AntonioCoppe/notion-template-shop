@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSupabase } from "@/lib/session-provider";
-import { signIn } from "next-auth/react";
 import Image from "next/image";
 
 export default function SignUp() {
@@ -16,9 +15,22 @@ export default function SignUp() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
 
-  const handleRoleAndSignIn = (selectedRole: 'buyer' | 'vendor') => {
-    // Pass the role along as a query param
-    signIn('google', { callbackUrl: `/auth/complete-profile?role=${selectedRole}` });
+  const handleRoleAndSignIn = async (selectedRole: 'buyer' | 'vendor') => {
+    // Use Supabase's OAuth flow with role in state
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/complete-profile?role=${selectedRole}`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
+    });
+    
+    if (error) {
+      console.error('OAuth error:', error);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

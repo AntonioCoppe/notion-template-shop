@@ -14,15 +14,21 @@ export async function POST(req: NextRequest) {
   
   const supabase = getSupabase();
   
-  // Find user by email
-  const { data: { users }, error: userError } = await supabase.auth.admin.listUsers();
-  if (userError) {
-    return NextResponse.json({ error: "Failed to find user" }, { status: 500 });
+  // Get the current user from the request cookies (Supabase session)
+  const accessToken = req.cookies.get("sb-access-token")?.value;
+  if (!accessToken) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
   
-  const user = users.find((u: { email?: string }) => u.email === email);
-  if (!user) {
+  // Verify the user and get their info
+  const { data: { user }, error: userError } = await supabase.auth.getUser(accessToken);
+  if (userError || !user) {
     return NextResponse.json({ error: "User not found" }, { status: 401 });
+  }
+  
+  // Verify the email matches
+  if (user.email !== email) {
+    return NextResponse.json({ error: "Email mismatch" }, { status: 403 });
   }
   
   // Update user metadata
