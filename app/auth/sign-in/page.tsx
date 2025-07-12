@@ -53,66 +53,77 @@ export default function SignIn() {
   };
 
   return (
-    <main className="max-w-md mx-auto px-4 py-20">
-      <h1 className="text-2xl font-bold mb-4 text-center">Sign in</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          placeholder="Email"
-          className="border px-3 py-2 rounded w-full text-black"
-          autoComplete="email"
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          placeholder="Password"
-          className="border px-3 py-2 rounded w-full text-black"
-          autoComplete="current-password"
-        />
-        <div className="text-right">
-          <Link href="/auth/forgot-password" className="text-sm text-blue-600 hover:underline">
-            Forgot password?
-          </Link>
-        </div>
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded p-3">
-            <p className="text-red-600 text-sm">{error}</p>
-            {error.includes("confirmation") && (
-              <div className="text-red-500 text-xs mt-2 space-y-1">
-                <p>Can&apos;t find the email? Try these steps:</p>
-                <ul className="list-disc list-inside ml-2 space-y-1">
-                  <li>Check your spam/junk folder</li>
-                  <li>Wait a few minutes - emails can take time to arrive</li>
-                  <li>Make sure you used the correct email address</li>
-                  <li>
-                    <Link href="/auth/sign-up" className="underline">
-                      Sign up again with a different email
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
-        <button
-          type="submit"
-          disabled={loading}
-          className={`btn-primary ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
-        >
-          {loading ? "Signing in…" : "Sign in"}
-        </button>
-      </form>
-      <p className="text-center text-sm mt-4">
-        Don&apos;t have an account?{' '}
-        <Link href="/auth/sign-up" className="underline">
-          Sign up
+    <main className="container min-h-screen flex flex-col items-center justify-center py-16">
+      <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8 flex flex-col items-center">
+        <Link href="/" className="logo mb-8">
+          <span className="logo-icon">
+            <span className="grid-cell"></span>
+            <span className="grid-cell"></span>
+            <span className="grid-cell"></span>
+            <span className="grid-cell"></span>
+          </span>
+          <span className="logo-text">Notion Template Shop</span>
         </Link>
-      </p>
+        <h1 className="text-2xl font-bold mb-4 text-center">Sign in</h1>
+        <form onSubmit={handleSubmit} className="space-y-4 w-full">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            placeholder="Email"
+            className="border px-3 py-2 rounded w-full text-black bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black"
+            autoComplete="email"
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            placeholder="Password"
+            className="border px-3 py-2 rounded w-full text-black bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black"
+            autoComplete="current-password"
+          />
+          <div className="text-right">
+            <Link href="/auth/forgot-password" className="text-sm text-blue-600 hover:underline">
+              Forgot password?
+            </Link>
+          </div>
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded p-3">
+              <p className="text-red-600 text-sm">{error}</p>
+              {error.includes("confirmation") && (
+                <div className="text-red-500 text-xs mt-2 space-y-1">
+                  <p>Can&apos;t find the email? Try these steps:</p>
+                  <ul className="list-disc list-inside ml-2 space-y-1">
+                    <li>Check your spam/junk folder</li>
+                    <li>Wait a few minutes - emails can take time to arrive</li>
+                    <li>Make sure you used the correct email address</li>
+                    <li>
+                      <Link href="/auth/sign-up" className="underline">
+                        Sign up again with a different email
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+          <button
+            type="submit"
+            disabled={loading}
+            className={`btn-primary w-full ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+          >
+            {loading ? "Signing in" : "Sign in"}
+          </button>
+        </form>
+        <p className="text-center text-sm mt-6">
+          Don&apos;t have an account?{' '}
+          <Link href="/auth/sign-up" className="underline">
+            Sign up
+          </Link>
+        </p>
+      </div>
     </main>
   );
 }

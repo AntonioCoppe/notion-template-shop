@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSupabase } from "@/lib/session-provider";
 import { vendorApiCall } from "@/lib/api-client";
 import Stripe from "stripe";
+import Link from "next/link";
 
 interface Template {
   id: string;
@@ -330,193 +331,203 @@ export default function VendorDashboard() {
     fetchTemplates();
   };
 
+  // Main dashboard content restyled
   return (
-    <main className="max-w-4xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Vendor Dashboard</h1>
-      </div>
+    <main className="container min-h-screen flex flex-col items-center justify-center py-16">
+      <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg p-8 flex flex-col items-center">
+        <Link href="/" className="logo mb-8">
+          <span className="logo-icon">
+            <span className="grid-cell"></span>
+            <span className="grid-cell"></span>
+            <span className="grid-cell"></span>
+            <span className="grid-cell"></span>
+          </span>
+          <span className="logo-text">Notion Template Shop</span>
+        </Link>
+        <h1 className="text-2xl font-bold mb-6 text-center">Vendor Dashboard</h1>
 
-      {/* Stripe Connect Section */}
-      <div className="bg-gray-50 p-6 rounded-lg mb-8">
-        <h2 className="text-xl font-semibold mb-4">Stripe Integration</h2>
-        {vendor?.stripe_account_id ? (
-          acctStatus?.capabilities?.transfers === "active" ? (
-            <div className="flex items-center gap-2">
-              <span className="text-green-600">✓ Connected to Stripe</span>
-              <span className="text-sm text-gray-500">
-                Account ID: {vendor.stripe_account_id}
-              </span>
-            </div>
+        {/* Stripe Connect Section */}
+        <div className="bg-gray-50 p-6 rounded-lg mb-8 w-full">
+          <h2 className="text-xl font-semibold mb-4">Stripe Integration</h2>
+          {vendor?.stripe_account_id ? (
+            acctStatus?.capabilities?.transfers === "active" ? (
+              <div className="flex items-center gap-2">
+                <span className="text-green-600">✓ Connected to Stripe</span>
+                <span className="text-sm text-gray-500">
+                  Account ID: {vendor.stripe_account_id}
+                </span>
+              </div>
+            ) : (
+              <div>
+                <p className="text-red-600 mb-2">
+                  ⚠️ Your Stripe account isn&apos;t fully onboarded.
+                </p>
+                <button
+                  onClick={connectStripe}
+                  disabled={connectingStripe}
+                  className={`bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700 ${
+                    connectingStripe ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                >
+                  {connectingStripe
+                    ? "Opening Stripe…"
+                    : "Finish Stripe Onboarding"}
+                </button>
+              </div>
+            )
           ) : (
             <div>
-              <p className="text-red-600 mb-2">
-                ⚠️ Your Stripe account isn&apos;t fully onboarded.
+              <p className="text-gray-600 mb-4">
+                Connect your Stripe account to start receiving payments for your templates.
               </p>
               <button
                 onClick={connectStripe}
                 disabled={connectingStripe}
-                className={`bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700 ${
+                className={`bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 ${
                   connectingStripe ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
-                {connectingStripe
-                  ? "Opening Stripe…"
-                  : "Finish Stripe Onboarding"}
+                {connectingStripe ? "Connecting..." : "Connect Stripe"}
               </button>
             </div>
-          )
-        ) : (
-          <div>
-            <p className="text-gray-600 mb-4">
-              Connect your Stripe account to start receiving payments for your templates.
-            </p>
-            <button
-              onClick={connectStripe}
-              disabled={connectingStripe}
-              className={`bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 ${
-                connectingStripe ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-            >
-              {connectingStripe ? "Connecting..." : "Connect Stripe"}
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Templates Section */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Your Templates</h2>
-          <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
-          >
-            {showAddForm ? "Cancel" : "Add Template"}
-          </button>
+          )}
         </div>
 
-        {/* Add Template Form */}
-        {showAddForm && (
-          <form onSubmit={addTemplate} className="bg-gray-50 p-6 rounded-lg mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <input
-                type="text"
-                placeholder="Template Title"
-                value={newTemplate.title}
-                onChange={(e) => setNewTemplate({ ...newTemplate, title: e.target.value })}
-                required
-                className="border px-3 py-2 rounded text-black"
-              />
-              <input
-                type="number"
-                step="0.01"
-                placeholder="Price ($)"
-                value={newTemplate.price}
-                onChange={(e) => setNewTemplate({ ...newTemplate, price: e.target.value })}
-                required
-                className="border px-3 py-2 rounded text-black"
-              />
-              <input
-                type="url"
-                placeholder="Notion Share URL"
-                value={newTemplate.notion_url}
-                onChange={(e) => setNewTemplate({ ...newTemplate, notion_url: e.target.value })}
-                required
-                className="border px-3 py-2 rounded text-black"
-              />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setNewTemplate({ ...newTemplate, file: e.target.files?.[0] || null })}
-                required
-                className="border px-3 py-2 rounded text-black"
-              />
-            </div>
+        {/* Templates Section */}
+        <div className="mb-8 w-full">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Your Templates</h2>
             <button
-              type="submit"
-              className="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
             >
-              Add Template
+              {showAddForm ? "Cancel" : "Add Template"}
             </button>
-          </form>
-        )}
-
-        {/* Templates List */}
-        {templates.length > 0 ? (
-          <div className="grid gap-4">
-            {templates.map((template) => (
-              <div key={template.id} className="border p-4 rounded-lg">
-                {editingTemplateId === template.id ? (
-                  <form onSubmit={handleEditSubmit} className="space-y-2">
-                    <input
-                      type="text"
-                      value={editTemplate.title}
-                      onChange={e => setEditTemplate({ ...editTemplate, title: e.target.value })}
-                      required
-                      className="border px-3 py-2 rounded text-black w-full"
-                      placeholder="Template Title"
-                    />
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={editTemplate.price}
-                      onChange={e => setEditTemplate({ ...editTemplate, price: e.target.value })}
-                      required
-                      className="border px-3 py-2 rounded text-black w-full"
-                      placeholder="Price ($)"
-                    />
-                    <input
-                      type="url"
-                      value={editTemplate.notion_url}
-                      onChange={e => setEditTemplate({ ...editTemplate, notion_url: e.target.value })}
-                      required
-                      className="border px-3 py-2 rounded text-black w-full"
-                      placeholder="Notion Share URL"
-                    />
-                    <div className="flex gap-2 mt-2">
-                      <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Save</button>
-                      <button type="button" onClick={cancelEdit} className="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
-                    </div>
-                  </form>
-                ) : (
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-semibold text-lg">{template.title}</h3>
-                      <p className="text-gray-600">${template.price}</p>
-                      <a
-                        href={template.notion_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 underline text-sm"
-                      >
-                        View Template
-                      </a>
-                    </div>
-                    <div className="flex flex-col gap-2 items-end">
-                      <span className="text-sm text-gray-500">{new Date(template.created_at).toLocaleDateString()}</span>
-                      <button
-                        onClick={() => startEdit(template)}
-                        className="bg-yellow-400 text-black px-3 py-1 rounded hover:bg-yellow-500 text-xs mt-2"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(template.id)}
-                        className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-xs"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
           </div>
-        ) : (
-          <p className="text-gray-600 text-center py-8">
-            No templates yet. Add your first template to get started!
-          </p>
-        )}
+
+          {/* Add Template Form */}
+          {showAddForm && (
+            <form onSubmit={addTemplate} className="bg-gray-50 p-6 rounded-lg mb-6 w-full">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <input
+                  type="text"
+                  placeholder="Template Title"
+                  value={newTemplate.title}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, title: e.target.value })}
+                  required
+                  className="border px-3 py-2 rounded text-black w-full"
+                />
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="Price ($)"
+                  value={newTemplate.price}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, price: e.target.value })}
+                  required
+                  className="border px-3 py-2 rounded text-black w-full"
+                />
+                <input
+                  type="url"
+                  placeholder="Notion Share URL"
+                  value={newTemplate.notion_url}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, notion_url: e.target.value })}
+                  required
+                  className="border px-3 py-2 rounded text-black w-full"
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setNewTemplate({ ...newTemplate, file: e.target.files?.[0] || null })}
+                  required
+                  className="border px-3 py-2 rounded text-black w-full"
+                />
+              </div>
+              <button
+                type="submit"
+                className="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full"
+              >
+                Add Template
+              </button>
+            </form>
+          )}
+
+          {/* Templates List */}
+          {templates.length > 0 ? (
+            <div className="grid gap-4 w-full">
+              {templates.map((template) => (
+                <div key={template.id} className="border p-4 rounded-lg w-full">
+                  {editingTemplateId === template.id ? (
+                    <form onSubmit={handleEditSubmit} className="space-y-2 w-full">
+                      <input
+                        type="text"
+                        value={editTemplate.title}
+                        onChange={e => setEditTemplate({ ...editTemplate, title: e.target.value })}
+                        required
+                        className="border px-3 py-2 rounded text-black w-full"
+                        placeholder="Template Title"
+                      />
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editTemplate.price}
+                        onChange={e => setEditTemplate({ ...editTemplate, price: e.target.value })}
+                        required
+                        className="border px-3 py-2 rounded text-black w-full"
+                        placeholder="Price ($)"
+                      />
+                      <input
+                        type="url"
+                        value={editTemplate.notion_url}
+                        onChange={e => setEditTemplate({ ...editTemplate, notion_url: e.target.value })}
+                        required
+                        className="border px-3 py-2 rounded text-black w-full"
+                        placeholder="Notion Share URL"
+                      />
+                      <div className="flex gap-2 mt-2 w-full">
+                        <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full">Save</button>
+                        <button type="button" onClick={cancelEdit} className="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400 w-full">Cancel</button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="flex justify-between items-start w-full">
+                      <div>
+                        <h3 className="font-semibold text-lg">{template.title}</h3>
+                        <p className="text-gray-600">${template.price}</p>
+                        <a
+                          href={template.notion_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 underline text-sm"
+                        >
+                          View Template
+                        </a>
+                      </div>
+                      <div className="flex flex-col gap-2 items-end w-full">
+                        <span className="text-sm text-gray-500">{new Date(template.created_at).toLocaleDateString()}</span>
+                        <button
+                          onClick={() => startEdit(template)}
+                          className="bg-yellow-400 text-black px-3 py-1 rounded hover:bg-yellow-500 text-xs mt-2 w-full"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(template.id)}
+                          className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-xs w-full"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-600 text-center py-8 w-full">
+              No templates yet. Add your first template to get started!
+            </p>
+          )}
+        </div>
       </div>
     </main>
   );
