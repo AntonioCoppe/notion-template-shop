@@ -1,11 +1,12 @@
-import { getSupabase } from './supabase';
 import { NextRequest } from 'next/server';
+import { getSupabase } from './supabase';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
-export interface AuthenticatedUser {
+export type AuthenticatedUser = {
   id: string;
   email: string;
-  role: string;
-}
+  role: 'buyer' | 'vendor';
+};
 
 export async function authenticateUser(request: NextRequest): Promise<AuthenticatedUser | null> {
   try {
@@ -34,6 +35,39 @@ export async function authenticateUser(request: NextRequest): Promise<Authentica
   } catch (error) {
     console.error('Authentication error:', error);
     return null;
+  }
+}
+
+// Utility function to clear stale tokens
+export async function clearStaleTokens(supabase: SupabaseClient) {
+  try {
+    await supabase.auth.signOut();
+    console.log('Stale tokens cleared');
+  } catch (error) {
+    console.error('Error clearing tokens:', error);
+  }
+}
+
+// Utility function to validate and refresh session
+export async function validateAndRefreshSession(supabase: SupabaseClient) {
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error || !session) {
+      // No valid session → try a refresh
+      const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+      
+      if (refreshError || !refreshedSession) {
+        throw new Error('Failed to refresh session');
+      }
+      
+      return refreshedSession;
+    }
+    
+    return session;
+  } catch (error) {
+    console.error('Session validation error:', error);
+    throw error;
   }
 }
 

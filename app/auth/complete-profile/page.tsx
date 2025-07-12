@@ -3,17 +3,27 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSupabase } from "@/lib/session-provider";
+import { validateAndRefreshSession } from "@/lib/auth-utils";
 
 function CompleteProfileContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, loading } = useSupabase();
+  const { user, loading, supabase } = useSupabase();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const completeProfile = async () => {
       if (!loading && user) {
+        // Validate session is fresh before proceeding
+        try {
+          await validateAndRefreshSession(supabase);
+        } catch (error) {
+          console.error('Session validation error:', error)
+          setError('Session validation failed. Please try signing in again.')
+          return
+        }
+
         const role = searchParams.get('role') as 'buyer' | 'vendor';
         
         if (!role || (role !== 'buyer' && role !== 'vendor')) {
@@ -55,7 +65,7 @@ function CompleteProfileContent() {
     };
 
     completeProfile();
-  }, [user, loading, router, searchParams]);
+  }, [user, loading, router, searchParams, supabase]);
 
   // Show loading state while completing profile
   return (

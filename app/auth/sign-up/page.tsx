@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSupabase } from "@/lib/session-provider";
+import { clearStaleTokens } from "@/lib/auth-utils";
 import Image from "next/image";
 
 export default function SignUp() {
@@ -16,6 +17,9 @@ export default function SignUp() {
   const [resendLoading, setResendLoading] = useState(false);
 
   const handleRoleAndSignIn = async (selectedRole: 'buyer' | 'vendor') => {
+    // Clear any stale tokens before starting new OAuth flow
+    await clearStaleTokens(supabase);
+    
     // Use Supabase's OAuth flow with role in state
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
