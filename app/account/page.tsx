@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getBrowserSupabase } from "@/lib/supabase-browser";
+import { useSupabase } from "@/lib/session-provider";
 import { useSupabaseUser } from "@/lib/useSupabaseUser";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -9,6 +9,7 @@ import OrderHistory from "../OrderHistory";
 
 export default function AccountPage() {
   const { user, loading } = useSupabaseUser();
+  const { supabase } = useSupabase();
   const router = useRouter();
   const [buyerId, setBuyerId] = useState<string | null>(null);
   const [accessDenied, setAccessDenied] = useState(false);
@@ -32,7 +33,6 @@ export default function AccountPage() {
     const fetchBuyerId = async () => {
       if (!user) return;
       
-      const supabase = getBrowserSupabase();
       const { data: buyerData, error: buyerError } = await supabase
         .from("buyers")
         .select("id")
@@ -47,15 +47,14 @@ export default function AccountPage() {
     if (user && user.user_metadata?.role === "buyer") {
       fetchBuyerId();
     }
-  }, [user]);
+  }, [user, supabase]);
 
   // Force session refresh if role is missing (fixes post-confirmation stale session)
   useEffect(() => {
     if (user && !user.user_metadata?.role) {
-      const supabase = getBrowserSupabase();
       supabase.auth.refreshSession().then(() => window.location.reload());
     }
-  }, [user]);
+  }, [user, supabase]);
 
   // Show loading state
   if (loading) {
@@ -69,39 +68,44 @@ export default function AccountPage() {
     );
   }
 
-  // Show access denied message
+  // Show access denied
   if (accessDenied) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
+        <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-          <p className="text-gray-600 mb-6">
-            This page is only accessible to buyers. Vendors should use the vendor dashboard.
+          <p className="text-gray-600 mb-4">
+            This page is only available to buyers.
           </p>
-          <button
-            onClick={() => router.push("/")}
-            className="bg-black text-white px-6 py-2 rounded hover:opacity-90"
+          <Link
+            href="/"
+            className="inline-block bg-black text-white px-6 py-2 rounded hover:opacity-90"
           >
-            Go to Home
-          </button>
+            Go Home
+          </Link>
         </div>
       </div>
     );
   }
 
+  // Show not authenticated
   if (!user) {
     return (
-      <main className="max-w-xl mx-auto px-4 py-10 text-center">
-        <h1 className="text-2xl font-bold mb-4">Account</h1>
-        <p className="mb-6">You need to sign in to view your account.</p>
-        <Link href="/auth/sign-in" className="text-blue-600 hover:underline">Sign in</Link>
-      </main>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Not Authenticated</h1>
+          <p className="text-gray-600 mb-4">
+            Please sign in to access your account.
+          </p>
+          <Link
+            href="/auth/sign-in"
+            className="inline-block bg-black text-white px-6 py-2 rounded hover:opacity-90"
+          >
+            Sign In
+          </Link>
+        </div>
+      </div>
     );
-  }
-
-  // Don't render the main content until we have a user and they're a buyer
-  if (user.user_metadata?.role !== "buyer") {
-    return null;
   }
 
   return (
@@ -118,7 +122,6 @@ export default function AccountPage() {
       
       <button
         onClick={async () => {
-          const supabase = getBrowserSupabase();
           await supabase.auth.signOut();
           await fetch("/api/supabase/session", { method: "DELETE", credentials: "include" });
           window.location.reload();

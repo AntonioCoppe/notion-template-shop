@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getBrowserSupabase } from "@/lib/supabase-browser";
-import type { User } from "@supabase/supabase-js";
+import { useSupabaseUser } from "@/lib/useSupabaseUser";
 import TemplateCard from "../template-card";
 
 // Define the Template type
@@ -15,20 +14,9 @@ interface Template {
 }
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading } = useSupabaseUser();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [templatesLoading, setTemplatesLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const supabase = getBrowserSupabase();
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user);
-      setLoading(false);
-    };
-    fetchUser();
-  }, []);
 
   useEffect(() => {
     const fetchTemplates = async () => {

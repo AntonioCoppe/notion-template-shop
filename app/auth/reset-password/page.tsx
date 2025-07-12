@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getBrowserSupabase } from "@/lib/supabase-browser";
+import { useSupabase } from "@/lib/session-provider";
 
 export default function ResetPassword() {
+  const { supabase } = useSupabase();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -15,7 +16,6 @@ export default function ResetPassword() {
   useEffect(() => {
     // Check if we have a valid session for password reset
     const checkSession = async () => {
-      const supabase = getBrowserSupabase();
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
@@ -27,7 +27,7 @@ export default function ResetPassword() {
     };
 
     checkSession();
-  }, []);
+  }, [supabase]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -46,7 +46,6 @@ export default function ResetPassword() {
       return;
     }
 
-    const supabase = getBrowserSupabase();
     const { error } = await supabase.auth.updateUser({
       password: password
     });
