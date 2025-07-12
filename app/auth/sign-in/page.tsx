@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSupabase } from "@/lib/session-provider";
+import { signIn } from "next-auth/react";
+import Image from "next/image";
 
 export default function SignIn() {
   const router = useRouter();
@@ -65,6 +67,21 @@ export default function SignIn() {
           <span className="logo-text">Notion Template Shop</span>
         </Link>
         <h1 className="text-2xl font-bold mb-4 text-center">Sign in</h1>
+        <div className="social-buttons w-full flex flex-col gap-3 mb-6">
+          <button
+            type="button"
+            onClick={() => signIn("google")}
+            className="flex items-center justify-center gap-2 border border-gray-300 rounded px-4 py-2 bg-white hover:bg-gray-50"
+          >
+            <Image src="/Google__G__logo.svg.png" alt="Google logo" width={20} height={20} />
+            Sign in with Google
+          </button>
+        </div>
+        <div className="flex items-center w-full mb-6">
+          <div className="flex-grow h-px bg-gray-200" />
+          <span className="mx-4 text-gray-400 font-medium">or</span>
+          <div className="flex-grow h-px bg-gray-200" />
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4 w-full">
           <input
             type="email"
