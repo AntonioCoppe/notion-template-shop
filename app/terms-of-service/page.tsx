@@ -20,7 +20,7 @@ export default function TermsOfService() {
           <Link href="#">Pricing</Link>
           <Link href="#">Resources ▼</Link>
         </nav>
-        <div className="buttons">
+        <div className="hidden md:flex buttons">
           <Link href="/auth/sign-up" className="btn-secondary">Join</Link>
           <Link href="/auth/sign-in" className="btn-primary">Learn</Link>
         </div>

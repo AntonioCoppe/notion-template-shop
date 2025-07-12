@@ -37,6 +37,8 @@
 
 html, body {
   height: 100%;
+  width: 100%;
+  overflow-x: hidden;
 }
 body {
   display: flex;
@@ -57,9 +59,23 @@ footer {
 }
 
 .container {
+  width: 100%;
   max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 0 var(--spacing-sm);
+}
+
+@media (max-width: 900px) {
+  .container {
+    max-width: 720px;
+  }
+}
+@media (max-width: 600px) {
+  .container {
+    max-width: 100%;
+    padding-left: var(--spacing-xs);
+    padding-right: var(--spacing-xs);
+  }
 }
 
 /* Header */
@@ -73,18 +89,20 @@ header .logo {
   font-size: var(--font-size-h3);
   font-weight: var(--font-weight-bold);
 }
-header nav {
-  display: flex;
-  gap: var(--spacing-lg);
-  font-weight: var(--font-weight-medium);
+@media (min-width: 48rem) {
+  header nav {
+    display: flex;
+    gap: var(--spacing-lg);
+    font-weight: var(--font-weight-medium);
+  }
+  header .buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+  }
 }
 header nav a {
   color: var(--color-text-primary);
   text-decoration: none;
-}
-header .buttons {
-  display: flex;
-  gap: var(--spacing-sm);
 }
 .btn-primary {
   background-color: var(--color-accent);
