@@ -2,18 +2,18 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useSupabase } from "@/lib/session-provider";
+import { useSession } from "next-auth/react";
 
 function CompleteProfileContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, loading } = useSupabase();
+  const { data: session, status } = useSession();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const completeProfile = async () => {
-      if (!loading && user) {
+      if (status === "authenticated" && session?.user) {
         const role = searchParams.get('role') as 'buyer' | 'vendor';
         
         if (!role || (role !== 'buyer' && role !== 'vendor')) {
@@ -29,7 +29,7 @@ function CompleteProfileContent() {
           const res = await fetch("/api/auth/set-role", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ role }),
+            body: JSON.stringify({ role, email: session.user.email }),
             credentials: "include",
           });
 
@@ -48,11 +48,14 @@ function CompleteProfileContent() {
           setError("Unexpected error occurred");
           setSaving(false);
         }
+      } else if (status === "unauthenticated") {
+        // If not authenticated, redirect to sign-in
+        router.push("/auth/sign-in");
       }
     };
 
     completeProfile();
-  }, [user, loading, router, searchParams]);
+  }, [session, status, router, searchParams]);
 
   // Show loading state while completing profile
   return (
@@ -84,3 +87,6 @@ export default function CompleteProfile() {
     </Suspense>
   );
 } 
+
+
+

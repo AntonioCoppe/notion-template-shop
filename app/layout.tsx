@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import SupabaseProvider from "@/lib/session-provider";
+import Providers from "./providers";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import Link from "next/link";
 import Header from "./Header";
@@ -36,7 +36,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SupabaseProvider>
+        <Providers>
           <Header />
           {children}
           {/* Footer */}
@@ -74,7 +74,7 @@ export default function RootLayout({
               </div>
             </div>
           </footer>
-        </SupabaseProvider>
+        </Providers>
         <SpeedInsights />
       </body>
     </html>

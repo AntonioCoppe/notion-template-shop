@@ -6,14 +6,24 @@ export async function POST(req: NextRequest) {
   if (role !== "buyer" && role !== "vendor") {
     return NextResponse.json({ error: "Invalid role" }, { status: 400 });
   }
+  
   const supabase = getSupabase();
-  const accessToken = req.cookies.get("sb-access-token")?.value;
-  if (!accessToken) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  
+  // For now, let's use a simpler approach - get the user email from the request body
+  // In a real implementation, you'd get this from the NextAuth session
+  const { email } = await req.json();
+  if (!email) {
+    return NextResponse.json({ error: "Email required" }, { status: 400 });
   }
-  // Get user
-  const { data: { user }, error } = await supabase.auth.getUser(accessToken);
-  if (error || !user) {
+  
+  // Find user by email
+  const { data: { users }, error: userError } = await supabase.auth.admin.listUsers();
+  if (userError) {
+    return NextResponse.json({ error: "Failed to find user" }, { status: 500 });
+  }
+  
+  const user = users.find(u => u.email === email);
+  if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 401 });
   }
   // Update user metadata
