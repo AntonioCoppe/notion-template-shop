@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSupabaseUser } from "@/lib/useSupabaseUser";
 import { useSupabase } from "@/lib/session-provider";
 
@@ -12,23 +12,17 @@ export default function Header() {
   const { supabase } = useSupabase();
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  const handleSignOut = async () => {
-    try {
-      console.log('▶️ calling signOut');
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Sign-out error:', error);
-        alert('Failed to sign out. Please try again.');
-        return;
-      }
-      console.log('✅ signOut succeeded');
-      await fetch("/api/supabase/session", { method: "DELETE", credentials: "include" });
-      window.location.href = '/auth/sign-in';
-    } catch (err) {
-      console.error("Sign out error:", err);
-      alert("Failed to sign out. Please try again.");
-    }
-  };
+  const handleFullSignOut = useCallback(async () => {
+    // Dynamically import next-auth signOut to avoid SSR issues
+    const { signOut: nextAuthSignOut } = await import("next-auth/react");
+    console.log('▶️ NextAuth signOut');
+    await nextAuthSignOut({ redirect: false });
+    console.log('▶️ supabase-js signOut');
+    await supabase.auth.signOut();
+    console.log('▶️ delete server-side supabase cookie');
+    await fetch('/api/supabase/session', { method: 'DELETE' });
+    window.location.href = '/auth/sign-in';
+  }, [supabase]);
 
   // Close user menu when clicking outside
   useEffect(() => {
@@ -116,7 +110,7 @@ export default function Header() {
                           </Link>
                         )}
                         <button
-                          onClick={handleSignOut}
+                          onClick={handleFullSignOut}
                           className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         >
                           Sign Out
@@ -163,7 +157,7 @@ export default function Header() {
                       <Link href="/vendor" className="btn-secondary text-center">Vendor Dashboard</Link>
                     )}
                     <button
-                      onClick={handleSignOut}
+                      onClick={handleFullSignOut}
                       className="btn-primary text-center"
                     >
                       Sign Out
