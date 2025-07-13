@@ -13,10 +13,17 @@ export default function Header() {
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   const handleFullSignOut = useCallback(async () => {
+    // Dynamically import next-auth signOut to avoid SSR issues
+    const { signOut: nextAuthSignOut } = await import("next-auth/react");
+    console.log('▶️ NextAuth signOut');
+    await nextAuthSignOut({ redirect: false });
+    console.log('✅ NextAuth cookies cleared');
     console.log('▶️ supabase-js signOut');
     await supabase.auth.signOut();
+    console.log('✅ supabase-js signOut complete');
     console.log('▶️ delete server-side supabase cookie');
     await fetch('/api/supabase/session', { method: 'DELETE' });
+    console.log('✅ server-side Supabase cookie cleared');
     window.location.href = '/auth/sign-in';
   }, [supabase]);
 

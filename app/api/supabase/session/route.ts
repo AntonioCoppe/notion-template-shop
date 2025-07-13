@@ -54,5 +54,11 @@ export async function DELETE(req: NextRequest) {
   } as const;
   res.cookies.set("sb-access-token", "", options);
   res.cookies.set("sb-refresh-token", "", options);
+  // Also clear any sb-uthbp* cookies (Supabase may set these for multi-tab/session support)
+  for (const cookie of req.cookies.getAll()) {
+    if (cookie.name.startsWith("sb-uthbp")) {
+      res.cookies.set(cookie.name, "", options);
+    }
+  }
   return res;
 } 
