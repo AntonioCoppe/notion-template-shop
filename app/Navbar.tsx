@@ -10,9 +10,16 @@ export default function Navbar() {
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
+      console.log('▶️ calling signOut');
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Sign-out error:', error);
+        alert('Failed to sign out. Please try again.');
+        return;
+      }
+      console.log('✅ signOut succeeded');
       await fetch("/api/supabase/session", { method: "DELETE", credentials: "include" });
-      window.location.reload();
+      window.location.href = '/auth/sign-in';
     } catch (err) {
       console.error("Sign out error:", err);
       alert("Failed to sign out. Please try again.");

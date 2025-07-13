@@ -22,7 +22,13 @@ export default function SupabaseProvider({
   const [supabase] = useState(() =>
     createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+        }
+      }
     )
   )
 
@@ -33,6 +39,7 @@ export default function SupabaseProvider({
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth event:', event, 'New session:', session);
       setUser(session?.user ?? null)
       setLoading(false)
     })
