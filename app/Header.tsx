@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSupabaseUser } from "@/lib/useSupabaseUser";
 import { useSupabase } from "@/lib/session-provider";
+import { fullSignOut } from "@/lib/fullSignOut";
 import { useRouter } from "next/navigation";
 
 export default function Header() {
@@ -16,8 +17,7 @@ export default function Header() {
 
   const handleFullSignOut = useCallback(async () => {
     console.log("Sign out clicked");
-    console.log("supabase:", supabase);
-    const { error } = await supabase.auth.signOut();
+    const { error } = await fullSignOut(supabase);
     console.log("Sign out error:", error);
     if (error) {
       console.error("Error signing out:", error);
