@@ -42,8 +42,16 @@ export async function DELETE(req: NextRequest) {
     : host === "localhost"
       ? undefined
       : host; // Use exact host, not .host
-  
-  const options = { maxAge: 0, path: "/", ...(domain && { domain }) } as const;
+
+  const options = {
+    maxAge: 0,
+    expires: new Date(0),
+    path: "/",
+    ...(domain && { domain }),
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+  } as const;
   res.cookies.set("sb-access-token", "", options);
   res.cookies.set("sb-refresh-token", "", options);
   return res;
