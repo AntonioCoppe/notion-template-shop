@@ -16,13 +16,16 @@ function CompleteProfileContent() {
     const completeProfile = async () => {
       // Always try to get session from URL fragment (PKCE flow)
       try {
-        const { data: { session }, error } = await supabase.auth.getSessionFromUrl();
-        if (error) console.error('Session error:', error);
-        if (session) {
-          console.log('Session from URL set:', session);
+        if (typeof window !== "undefined") {
+          const url = new URL(window.location.href);
+          if (url.searchParams.get("code") && url.searchParams.get("state")) {
+            const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
+            if (error) console.error("Session exchange error:", error);
+            else console.log("Session exchanged from URL code/state");
+          }
         }
       } catch (err) {
-        console.error('getSessionFromUrl threw:', err);
+        console.error('exchangeCodeForSession threw:', err);
       }
       if (!loading && user) {
         // Validate session is fresh before proceeding
