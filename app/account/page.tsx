@@ -122,11 +122,15 @@ export default function AccountPage() {
       
       <button
         onClick={async () => {
+          console.log("Sign out clicked");
+          console.log("supabase:", supabase);
           const { error } = await supabase.auth.signOut();
+          console.log("Sign out error:", error);
           if (error) {
             console.error("Error signing out:", error);
             return;
           }
+          console.log("Redirecting to /auth/sign-in");
           router.push("/auth/sign-in");
         }}
         className="rounded bg-black text-white px-6 py-2 hover:opacity-90"
