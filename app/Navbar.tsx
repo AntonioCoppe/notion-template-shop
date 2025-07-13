@@ -9,37 +9,37 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleFullSignOut = useCallback(async () => {
-    // 1. NextAuth
+    // 1️⃣ NextAuth
     try {
-      const { signOut: nextAuthSignOut } = await import('next-auth/react');
-      console.log('▶️ NextAuth signOut');
+      const { signOut: nextAuthSignOut } = await import("next-auth/react");
+      console.log("▶️ NextAuth signOut");
       await nextAuthSignOut({ redirect: false });
-      console.log('✅ NextAuth cookies cleared');
+      console.log("✅ NextAuth cookies cleared");
     } catch (err) {
-      console.error('❌ NextAuth signOut error', err);
+      console.error("❌ NextAuth signOut error:", err);
     }
 
-    // 2. DELETE your HTTP-only Supabase cookie
+    // 2️⃣ Supabase cookie DELETE
     try {
-      console.log('▶️ delete server-side supabase cookie');
-      const res = await fetch(`${window.location.origin}/api/supabase/session`, { method: 'DELETE' });
-      console.log('✅ server-side Supabase cookie cleared, status=', res.status);
+      console.log("▶️ delete server-side supabase cookie");
+      const res = await fetch("/api/supabase/session", { method: "DELETE" });
+      console.log("✅ server-side Supabase cookie cleared, status=", res.status);
     } catch (err) {
-      console.error('❌ supabase cookie DELETE error', err);
+      console.error("❌ server-side supabase cookie DELETE error:", err);
     }
 
-    // 3. supabase-js client signOut
+    // 3️⃣ supabase-js client signOut
     try {
-      console.log('▶️ supabase-js signOut');
+      console.log("▶️ supabase-js signOut");
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      console.log('✅ supabase-js signOut complete');
+      console.log("✅ supabase-js signOut complete");
     } catch (err) {
-      console.error('❌ supabase-js signOut error', err);
+      console.error("❌ supabase-js signOut error:", err);
     }
 
-    // 4. force a fresh load
-    window.location.href = '/auth/sign-in';
+    // 4️⃣ Finally force a full reload
+    window.location.assign("/auth/sign-in");
   }, [supabase]);
 
   // Navigation links for reuse
