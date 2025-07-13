@@ -32,30 +32,34 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   const res = NextResponse.json({ success: true });
-  const host = req.nextUrl.hostname;
-  const isProd = process.env.NODE_ENV === "production";
-  const domain = isProd && process.env.ROOT_DOMAIN
-    ? `.${process.env.ROOT_DOMAIN}`
-    : host === "localhost"
-      ? undefined
-      : `.${host}`;
-
-  const cookieOptions = {
-    path:   "/",
-    domain,
-    secure: isProd,
-    sameSite: "lax" as const,
-    httpOnly: true,
-    expires: new Date(0),
+  const root = process.env.ROOT_DOMAIN; // e.g. "notiontemplateshop.com"
+  const optionsBase = {
     maxAge: 0,
-  };
+    expires: new Date(0),
+    path: "/",
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+  } as const;
 
-  // Remove Supabase cookies by setting them to empty with expiry
-  res.cookies.set("sb-access-token", "", cookieOptions);
-  res.cookies.set("sb-refresh-token", "", cookieOptions);
+  // Clear host-only cookies (no domain)
+  res.cookies.set("sb-access-token", "", optionsBase);
+  res.cookies.set("sb-refresh-token", "", optionsBase);
   for (const c of req.cookies.getAll()) {
     if (c.name.startsWith("sb-uthbp")) {
-      res.cookies.set(c.name, "", cookieOptions);
+      res.cookies.set(c.name, "", optionsBase);
+    }
+  }
+
+  // If you ever set cookies at the apex domain, clear those too
+  if (root) {
+    const optionsRoot = { ...optionsBase, domain: root };
+    res.cookies.set("sb-access-token", "", optionsRoot);
+    res.cookies.set("sb-refresh-token", "", optionsRoot);
+    for (const c of req.cookies.getAll()) {
+      if (c.name.startsWith("sb-uthbp")) {
+        res.cookies.set(c.name, "", optionsRoot);
+      }
     }
   }
 

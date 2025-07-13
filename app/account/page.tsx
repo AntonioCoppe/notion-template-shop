@@ -123,29 +123,16 @@ export default function AccountPage() {
       <button
         onClick={async () => {
           try {
-            const { signOut: nextAuthSignOut } = await import("next-auth/react");
-            console.log("▶️ NextAuth signOut");
-            await nextAuthSignOut({ callbackUrl: '/auth/sign-in' });
-            console.log("✅ NextAuth cookies cleared and redirected");
-          } catch (err) {
-            console.error("❌ NextAuth signOut error:", err);
-          }
-          try {
-            console.log("▶️ supabase-js signOut");
+            // Sign out from Supabase
             const { error } = await supabase.auth.signOut();
             if (error) throw error;
-            console.log("✅ supabase-js signOut complete");
+            // Clear Supabase cookies server-side
+            await fetch("/api/supabase/session", { method: "DELETE" });
+            // Redirect to sign-in
+            window.location.href = "/auth/sign-in";
           } catch (err) {
-            console.error("❌ supabase-js signOut error:", err);
+            console.error("Sign out error:", err);
           }
-          try {
-            console.log("▶️ delete server-side supabase cookie");
-            const res = await fetch("/api/supabase/session", { method: "DELETE" });
-            console.log("✅ server-side Supabase cookie cleared, status=", res.status);
-          } catch (err) {
-            console.error("❌ server-side supabase cookie DELETE error:", err);
-          }
-          // No need for window.location.href because NextAuth already redirected
         }}
         className="rounded bg-black text-white px-6 py-2 hover:opacity-90"
       >
