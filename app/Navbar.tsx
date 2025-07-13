@@ -2,29 +2,19 @@
 
 import Link from "next/link";
 import { useSupabase } from "@/lib/session-provider";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 export default function Navbar() {
   const { user, loading, supabase } = useSupabase();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const handleSignOut = async () => {
-    try {
-      console.log('▶️ calling signOut');
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Sign-out error:', error);
-        alert('Failed to sign out. Please try again.');
-        return;
-      }
-      console.log('✅ signOut succeeded');
-      await fetch("/api/supabase/session", { method: "DELETE", credentials: "include" });
-      window.location.href = '/auth/sign-in';
-    } catch (err) {
-      console.error("Sign out error:", err);
-      alert("Failed to sign out. Please try again.");
-    }
-  };
+  const handleFullSignOut = useCallback(async () => {
+    console.log('▶️ supabase-js signOut');
+    await supabase.auth.signOut();
+    console.log('▶️ delete server-side supabase cookie');
+    await fetch('/api/supabase/session', { method: 'DELETE' });
+    window.location.href = '/auth/sign-in';
+  }, [supabase]);
 
   // Navigation links for reuse
   const navLinks = (
@@ -71,7 +61,7 @@ export default function Navbar() {
               <span className="mr-2 text-xs px-2 py-1 rounded" style={{ color: 'var(--foreground)', background: 'var(--divider)' }}>
                 {user.user_metadata?.role || 'user'}
               </span>
-              <button onClick={handleSignOut} className="text-sm underline" style={{ color: 'var(--link)' }}>Sign out</button>
+              <button onClick={handleFullSignOut} className="text-sm underline" style={{ color: 'var(--link)' }}>Sign out</button>
             </>
           ) : (
             <>
@@ -93,7 +83,7 @@ export default function Navbar() {
                 <span className="text-xs px-2 py-1 rounded mb-2" style={{ color: 'var(--foreground)', background: 'var(--divider)' }}>
                   {user.user_metadata?.role || 'user'}
                 </span>
-                <button onClick={handleSignOut} className="text-sm underline text-left" style={{ color: 'var(--link)' }}>Sign out</button>
+                <button onClick={handleFullSignOut} className="text-sm underline text-left" style={{ color: 'var(--link)' }}>Sign out</button>
               </>
             ) : (
               <>
