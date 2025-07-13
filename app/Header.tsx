@@ -13,9 +13,14 @@ export default function Header() {
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    await fetch("/api/supabase/session", { method: "DELETE", credentials: "include" });
-    window.location.reload();
+    try {
+      await supabase.auth.signOut();
+      await fetch("/api/supabase/session", { method: "DELETE", credentials: "include" });
+      window.location.reload();
+    } catch (err) {
+      console.error("Sign out error:", err);
+      alert("Failed to sign out. Please try again.");
+    }
   };
 
   // Close user menu when clicking outside

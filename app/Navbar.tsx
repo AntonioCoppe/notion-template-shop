@@ -9,9 +9,14 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-            await fetch("/api/supabase/session", { method: "DELETE", credentials: "include" });
-    window.location.reload();
+    try {
+      await supabase.auth.signOut();
+      await fetch("/api/supabase/session", { method: "DELETE", credentials: "include" });
+      window.location.reload();
+    } catch (err) {
+      console.error("Sign out error:", err);
+      alert("Failed to sign out. Please try again.");
+    }
   };
 
   // Navigation links for reuse

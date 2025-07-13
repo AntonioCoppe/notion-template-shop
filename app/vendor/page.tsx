@@ -214,6 +214,10 @@ export default function VendorDashboard() {
   }
 
   const connectStripe = async () => {
+    if (!vendor) {
+      alert("Vendor data is still loading. Please wait.");
+      return;
+    }
     setConnectingStripe(true);
     try {
       console.log("Connecting Stripe for vendor:", vendor?.id);
@@ -383,9 +387,9 @@ export default function VendorDashboard() {
               </p>
               <button
                 onClick={connectStripe}
-                disabled={connectingStripe}
+                disabled={connectingStripe || !vendor}
                 className={`bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 ${
-                  connectingStripe ? "opacity-50 cursor-not-allowed" : ""
+                  connectingStripe || !vendor ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
                 {connectingStripe ? "Connecting..." : "Connect Stripe"}
