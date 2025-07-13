@@ -1,19 +1,18 @@
 export async function authenticatedFetch(url: string, options: RequestInit = {}) {
   // Note: This function should be used within a component that has access to the session provider
   // For server-side usage, you'll need to pass the session token directly
-  
-  // For now, we'll use the browser client directly for this utility function
-  // In a real implementation, you might want to restructure this to work with the session provider
+
+  // Use the browser client for client-side requests
   const { createBrowserClient } = await import('@supabase/ssr');
-  
+
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
-  
+
   // Get the current session
   const { data: { session } } = await supabase.auth.getSession();
-  
+
   if (!session?.access_token) {
     throw new Error('No authentication token available');
   }
