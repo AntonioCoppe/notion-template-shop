@@ -54,7 +54,6 @@ export default function NotFound() {
             <Link href="#">Resources</Link>
           </nav>
           <div className="footer-social">
-            <a href="#" aria-label="Twitter">🐦</a>
             <a href="#" aria-label="LinkedIn">💼</a>
             <a href="#" aria-label="Instagram">📸</a>
           </div>
