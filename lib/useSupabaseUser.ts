@@ -1,24 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getBrowserSupabase } from "./supabase-browser";
-import type { User, Session } from "@supabase/supabase-js";
+import { useSupabase } from "./session-provider";
+import type { Session } from "@supabase/supabase-js";
 
 export function useSupabaseUser() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { supabase, user, loading } = useSupabase();
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    const supabase = getBrowserSupabase();
-
     const url = new URL(window.location.href);
     const urlAccessToken = url.searchParams.get("access_token");
     const urlRefreshToken = url.searchParams.get("refresh_token");
 
     const handleSession = async (session: Session | null) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-
       if (session) {
         await fetch("/api/supabase/session", {
           method: "POST",
@@ -53,13 +48,15 @@ export function useSupabaseUser() {
         await handleSession(session);
       });
     }
-    // Listen for auth changes
+
+    setIsInitialized(true);
+  }, [supabase]);
+
+  // Listen for auth changes
+  useEffect(() => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-
       const sendTokens =
         session &&
         ["INITIAL_SESSION", "SIGNED_IN", "TOKEN_REFRESHED", "USER_UPDATED"].includes(
@@ -89,7 +86,7 @@ export function useSupabaseUser() {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [supabase]);
 
-  return { user, loading };
+  return { user, loading: loading || !isInitialized };
 } 
