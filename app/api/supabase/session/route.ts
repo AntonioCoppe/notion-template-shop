@@ -33,32 +33,31 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const res = NextResponse.json({ success: true });
   const host = req.nextUrl.hostname;
-  
-  // Fix: Use exact host instead of domain-wide scope to prevent duplicate cookies
-  const domain = process.env.NODE_ENV === "production"
-    ? process.env.ROOT_DOMAIN
-      ? `.${process.env.ROOT_DOMAIN}` // Use leading dot for all subdomains
-      : undefined
+  const isProd = process.env.NODE_ENV === "production";
+  const domain = isProd && process.env.ROOT_DOMAIN
+    ? `.${process.env.ROOT_DOMAIN}`
     : host === "localhost"
       ? undefined
-      : host; // Use exact host, not .host
+      : `.${host}`;
 
-  const options = {
-    maxAge: 0,
-    expires: new Date(0),
-    path: "/",
-    ...(domain && { domain }),
-    httpOnly: true,
+  const cookieOptions = {
+    path:   "/",
+    domain,
+    secure: isProd,
     sameSite: "lax" as const,
-    secure: process.env.NODE_ENV === "production",
-  } as const;
-  res.cookies.set("sb-access-token", "", options);
-  res.cookies.set("sb-refresh-token", "", options);
-  // Also clear any sb-uthbp* cookies (Supabase may set these for multi-tab/session support)
-  for (const cookie of req.cookies.getAll()) {
-    if (cookie.name.startsWith("sb-uthbp")) {
-      res.cookies.set(cookie.name, "", options);
+    httpOnly: true,
+    expires: new Date(0),
+    maxAge: 0,
+  };
+
+  // Remove Supabase cookies by setting them to empty with expiry
+  res.cookies.set("sb-access-token", "", cookieOptions);
+  res.cookies.set("sb-refresh-token", "", cookieOptions);
+  for (const c of req.cookies.getAll()) {
+    if (c.name.startsWith("sb-uthbp")) {
+      res.cookies.set(c.name, "", cookieOptions);
     }
   }
+
   return res;
 } 

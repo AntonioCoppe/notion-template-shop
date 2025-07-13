@@ -150,10 +150,10 @@ export default function Header() {
       {menuOpen && (
         <div className="md:hidden bg-white border-t border-gray-200 shadow-lg z-50 w-full">
           <div className="flex flex-col gap-2 py-2 px-4">
-            <Link href="/">Home Page</Link>
-            <Link href="/templates">Templates</Link>
-            <Link href="#">Pricing</Link>
-            <Link href="#">Resources ▼</Link>
+            <Link href="/" onClick={() => setMenuOpen(false)}>Home Page</Link>
+            <Link href="/templates" onClick={() => setMenuOpen(false)}>Templates</Link>
+            <Link href="#" onClick={() => setMenuOpen(false)}>Pricing</Link>
+            <Link href="#" onClick={() => setMenuOpen(false)}>Resources ▼</Link>
             {loading ? (
               <div className="flex items-center gap-2 py-2 border-t border-gray-200 mt-2">
                 <div className="w-4 h-4 border-2 border-gray-300 border-t-black rounded-full animate-spin"></div>
@@ -169,9 +169,9 @@ export default function Header() {
                       </div>
                       <span className="text-sm text-gray-600">{user.email}</span>
                     </div>
-                    <Link href="/account" className="btn-secondary text-center">Account</Link>
+                    <Link href="/account" className="btn-secondary text-center" onClick={() => setMenuOpen(false)}>Account</Link>
                     {user.user_metadata?.role === 'vendor' && (
-                      <Link href="/vendor" className="btn-secondary text-center">Vendor Dashboard</Link>
+                      <Link href="/vendor" className="btn-secondary text-center" onClick={() => setMenuOpen(false)}>Vendor Dashboard</Link>
                     )}
                     <button
                       onClick={handleFullSignOut}
@@ -180,12 +180,12 @@ export default function Header() {
                       Sign Out
                     </button>
                   </>
-                ) : (
+                ) :
                   <div className="flex gap-2 mt-2">
-                    <Link href="/auth/sign-up" className="btn-secondary flex-1 text-center">Join</Link>
-                    <Link href="/auth/sign-in" className="btn-primary flex-1 text-center">Learn</Link>
+                    <Link href="/auth/sign-up" className="btn-secondary flex-1 text-center" onClick={() => setMenuOpen(false)}>Join</Link>
+                    <Link href="/auth/sign-in" className="btn-primary flex-1 text-center" onClick={() => setMenuOpen(false)}>Learn</Link>
                   </div>
-                )}
+                }
               </>
             )}
           </div>
