@@ -37,7 +37,7 @@ export async function DELETE(req: NextRequest) {
   // Fix: Use exact host instead of domain-wide scope to prevent duplicate cookies
   const domain = process.env.NODE_ENV === "production"
     ? process.env.ROOT_DOMAIN
-      ? process.env.ROOT_DOMAIN // Use exact domain, not .domain
+      ? `.${process.env.ROOT_DOMAIN}` // Use leading dot for all subdomains
       : undefined
     : host === "localhost"
       ? undefined

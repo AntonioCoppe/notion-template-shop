@@ -9,26 +9,16 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleFullSignOut = useCallback(async () => {
-    // 1️⃣ NextAuth
+    // 1️⃣ Let NextAuth clear *and* redirect
     try {
       const { signOut: nextAuthSignOut } = await import("next-auth/react");
       console.log("▶️ NextAuth signOut");
-      await nextAuthSignOut({ redirect: false });
-      console.log("✅ NextAuth cookies cleared");
+      await nextAuthSignOut({ callbackUrl: '/auth/sign-in' });
+      console.log("✅ NextAuth cookies cleared and redirected");
     } catch (err) {
       console.error("❌ NextAuth signOut error:", err);
     }
-
-    // 2️⃣ Supabase cookie DELETE
-    try {
-      console.log("▶️ delete server-side supabase cookie");
-      const res = await fetch("/api/supabase/session", { method: "DELETE" });
-      console.log("✅ server-side Supabase cookie cleared, status=", res.status);
-    } catch (err) {
-      console.error("❌ server-side supabase cookie DELETE error:", err);
-    }
-
-    // 3️⃣ supabase-js client signOut
+    // 2️⃣ Then call Supabase logout and clear cookies server-side (this runs *after* NextAuth redirect)
     try {
       console.log("▶️ supabase-js signOut");
       const { error } = await supabase.auth.signOut();
@@ -37,9 +27,14 @@ export default function Navbar() {
     } catch (err) {
       console.error("❌ supabase-js signOut error:", err);
     }
-
-    // 4️⃣ Finally force a full reload
-    window.location.assign("/auth/sign-in");
+    try {
+      console.log("▶️ delete server-side supabase cookie");
+      const res = await fetch("/api/supabase/session", { method: "DELETE" });
+      console.log("✅ server-side Supabase cookie cleared, status=", res.status);
+    } catch (err) {
+      console.error("❌ server-side supabase cookie DELETE error:", err);
+    }
+    // No need for window.location.href because NextAuth already redirected
   }, [supabase]);
 
   // Navigation links for reuse
