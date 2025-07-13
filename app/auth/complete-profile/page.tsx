@@ -14,6 +14,16 @@ function CompleteProfileContent() {
 
   useEffect(() => {
     const completeProfile = async () => {
+      // Always try to get session from URL fragment (PKCE flow)
+      try {
+        const { data: { session }, error } = await supabase.auth.getSessionFromUrl();
+        if (error) console.error('Session error:', error);
+        if (session) {
+          console.log('Session from URL set:', session);
+        }
+      } catch (err) {
+        console.error('getSessionFromUrl threw:', err);
+      }
       if (!loading && user) {
         // Validate session is fresh before proceeding
         try {
