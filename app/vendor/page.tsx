@@ -216,12 +216,13 @@ export default function VendorDashboard() {
   const connectStripe = async () => {
     setConnectingStripe(true);
     try {
+      console.log("Connecting Stripe for vendor:", vendor?.id);
       const response = await vendorApiCall("/api/stripe/connect", {
         method: "POST",
         body: JSON.stringify({ vendorId: vendor?.id }),
       });
-
       const { url } = await response.json();
+      console.log("Stripe onboarding URL received:", url);
       window.location.href = url;
     } catch (error) {
       console.error("Error connecting Stripe:", error);

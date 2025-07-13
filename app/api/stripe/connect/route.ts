@@ -6,22 +6,26 @@ import { getSupabase } from "@/lib/supabase";
 import { authenticateUser, requireVendor } from "@/lib/auth-utils";
 
 export async function POST(req: NextRequest) {
+  console.log('⚡️ Stripe connect handler hit', { url: req.url, method: req.method });
   try {
     // Authenticate and verify vendor role
     const user = await authenticateUser(req);
     const vendor = requireVendor(user);
+    const vendorId = (await req.json()).vendorId;
+    console.log('Stripe connect POST for vendorId:', vendorId, 'userId:', vendor.id);
 
     if (!process.env.STRIPE_SECRET_KEY) {
+      console.error('Missing STRIPE_SECRET_KEY env var');
       return new NextResponse("Server config error", { status: 500 });
     }
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: "2025-05-28.basil",
     });
     const supabase = getSupabase();
-    const { vendorId } = await req.json();
     const origin = new URL(req.url).origin;
 
     if (!vendorId) {
+      console.error('Missing vendorId in request body');
       return NextResponse.json({ error: "Missing vendorId" }, { status: 400 });
     }
 
@@ -34,6 +38,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (vendorErr || !vendorData) {
+      console.error('Vendor not found or access denied', { vendorErr, vendorId, userId: vendor.id });
       return NextResponse.json({ error: "Vendor not found or access denied" }, { status: 404 });
     }
 
@@ -48,6 +53,7 @@ export async function POST(req: NextRequest) {
         .single();
 
       if (userErr || !userData) {
+        console.error('Vendor user not found', { userErr, vendorId, userId: vendor.id });
         return NextResponse.json({ error: "Vendor user not found" }, { status: 404 });
       }
 
@@ -81,10 +87,14 @@ export async function POST(req: NextRequest) {
       return_url:   `${origin}/vendor?status=connected`,
       type:         "account_onboarding",
     });
-
+    console.log('Stripe onboarding link generated', { accountId, vendorId, userId: vendor.id, onboardingUrl: link.url });
     return NextResponse.json({ url: link.url });
   } catch (error) {
-    console.error("Stripe connect error:", error);
+    if (error instanceof Error) {
+      console.error("Stripe connect error:", error, { errorString: error.toString(), stack: error.stack });
+    } else {
+      console.error("Stripe connect error:", error);
+    }
     if (error instanceof Error) {
       if (error.message === "Authentication required") {
         return NextResponse.json({ error: "Authentication required" }, { status: 401 });
