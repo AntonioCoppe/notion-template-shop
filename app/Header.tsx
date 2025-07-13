@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSupabaseUser } from "@/lib/useSupabaseUser";
 import { useSupabase } from "@/lib/session-provider";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -11,20 +12,16 @@ export default function Header() {
   const { user, loading } = useSupabaseUser();
   const { supabase } = useSupabase();
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const handleFullSignOut = useCallback(async () => {
-    try {
-      // Sign out from Supabase
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      // Clear Supabase cookies server-side
-      await fetch("/api/supabase/session", { method: "DELETE" });
-      // Redirect to sign-in
-      window.location.href = "/auth/sign-in";
-    } catch (err) {
-      console.error("Sign out error:", err);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Error signing out:", error);
+      return;
     }
-  }, [supabase]);
+    router.push("/auth/sign-in");
+  }, [supabase, router]);
 
   // Close user menu when clicking outside
   useEffect(() => {

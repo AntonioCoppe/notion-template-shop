@@ -122,17 +122,12 @@ export default function AccountPage() {
       
       <button
         onClick={async () => {
-          try {
-            // Sign out from Supabase
-            const { error } = await supabase.auth.signOut();
-            if (error) throw error;
-            // Clear Supabase cookies server-side
-            await fetch("/api/supabase/session", { method: "DELETE" });
-            // Redirect to sign-in
-            window.location.href = "/auth/sign-in";
-          } catch (err) {
-            console.error("Sign out error:", err);
+          const { error } = await supabase.auth.signOut();
+          if (error) {
+            console.error("Error signing out:", error);
+            return;
           }
+          router.push("/auth/sign-in");
         }}
         className="rounded bg-black text-white px-6 py-2 hover:opacity-90"
       >

@@ -3,24 +3,21 @@
 import Link from "next/link";
 import { useSupabase } from "@/lib/session-provider";
 import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Navbar() {
   const { user, loading, supabase } = useSupabase();
   const [menuOpen, setMenuOpen] = useState(false);
+  const router = useRouter();
 
   const handleFullSignOut = useCallback(async () => {
-    try {
-      // Sign out from Supabase
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      // Clear Supabase cookies server-side
-      await fetch("/api/supabase/session", { method: "DELETE" });
-      // Redirect to sign-in
-      window.location.href = "/auth/sign-in";
-    } catch (err) {
-      console.error("Sign out error:", err);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Error signing out:", error);
+      return;
     }
-  }, [supabase]);
+    router.push("/auth/sign-in");
+  }, [supabase, router]);
 
   // Navigation links for reuse
   const navLinks = (
