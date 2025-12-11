@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSupabase } from "@/lib/session-provider";
 import { useState, useCallback } from "react";
+import { fullSignOut } from "@/lib/fullSignOut";
 import { useRouter } from "next/navigation";
 
 export default function Navbar() {
@@ -12,8 +13,7 @@ export default function Navbar() {
 
   const handleFullSignOut = useCallback(async () => {
     console.log("Sign out clicked");
-    console.log("supabase:", supabase);
-    const { error } = await supabase.auth.signOut();
+    const { error } = await fullSignOut(supabase);
     console.log("Sign out error:", error);
     if (error) {
       console.error("Error signing out:", error);
